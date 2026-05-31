@@ -268,7 +268,7 @@
         </div>
       </div>
       <div class="login-tabs">
-        <button class="login-tab active" onclick="setLoginTab('admin')">Admin / VA</button>
+        <button class="login-tab active" onclick="setLoginTab('admin')">Admin</button>
         <button class="login-tab" onclick="setLoginTab('client')">Client Portal</button>
       </div>
       <div id="login-admin-fields">
@@ -559,7 +559,10 @@
   </div>
 </div><!-- /app -->
 
-<script>
+<script type="module">
+import { initializeApp }                                          from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot }         from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 // ═══════════════════════════════════════════
 //  DATA
 // ═══════════════════════════════════════════
@@ -621,50 +624,34 @@ function setSyncStatus(state, msg) {
   el.textContent = msg;
 }
 
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
-    const s = document.createElement("script");
-    s.src = src;
-    s.onload = () => resolve();
-    s.onerror = () => reject(new Error("Failed to load: " + src));
-    document.head.appendChild(s);
-  });
-}
-
 async function loadData() {
   try {
     setSyncStatus("syncing", "⟳ Connecting...");
 
-    // Load Firebase SDKs sequentially
-    const BASE = "https://www.gstatic.com/firebasejs/9.23.0";
-    await loadScript(BASE + "/firebase-app-compat.js");
-    await loadScript(BASE + "/firebase-firestore-compat.js");
-    await loadScript(BASE + "/firebase-auth-compat.js");
-
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    db = firebase.firestore();
-    auth = firebase.auth();
+    const app = initializeApp(firebaseConfig);
+    db   = getFirestore(app);
+    auth = getAuth(app);
     fbReady = true;
 
-    const snap = await db.collection("crm").doc("data").get();
-    if (snap.exists) {
+    // Store helpers for use in other functions
+    window._fbDb   = { doc, getDoc, setDoc, onSnapshot };
+    window._fbAuth = { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut };
+
+    const snap = await getDoc(doc(db, "crm", "data"));
+    if (snap.exists()) {
       const d = snap.data();
       leads          = d.leads          || DEFAULT_LEADS;
       reminders      = d.reminders      || DEFAULT_REMINDERS;
       pipelineStages = d.pipelineStages || [...DEFAULT_STAGES];
     } else {
-      leads = DEFAULT_LEADS;
-      reminders = DEFAULT_REMINDERS;
-      pipelineStages = [...DEFAULT_STAGES];
-      await db.collection("crm").doc("data").set({ leads, reminders, pipelineStages });
+      leads = DEFAULT_LEADS; reminders = DEFAULT_REMINDERS; pipelineStages = [...DEFAULT_STAGES];
+      await setDoc(doc(db, "crm", "data"), { leads, reminders, pipelineStages });
     }
 
     setSyncStatus("ok", "● Live");
 
-    // Real-time listener — pushes changes from any VA to all open browsers
-    db.collection("crm").doc("data").onSnapshot((snap) => {
-      if (!snap.exists) return;
+    onSnapshot(doc(db, "crm", "data"), (snap) => {
+      if (!snap.exists()) return;
       const d = snap.data();
       leads          = d.leads          || leads;
       reminders      = d.reminders      || reminders;
@@ -676,15 +663,11 @@ async function loadData() {
   } catch(e) {
     const msg = e && e.message ? e.message : String(e);
     console.error("Firebase error:", msg, e);
-    setSyncStatus("error", "⚠ Offline: " + msg.slice(0,40));
-    // Fall back to localStorage so the app still works
+    setSyncStatus("error", "⚠ Offline");
     try {
-      const sl = localStorage.getItem("tdg_leads");
-      const sr = localStorage.getItem("tdg_reminders");
-      const ss = localStorage.getItem("tdg_pipeline_stages");
-      leads          = sl ? JSON.parse(sl) : DEFAULT_LEADS;
-      reminders      = sr ? JSON.parse(sr) : DEFAULT_REMINDERS;
-      pipelineStages = ss ? JSON.parse(ss) : [...DEFAULT_STAGES];
+      leads          = JSON.parse(localStorage.getItem("tdg_leads"))          || DEFAULT_LEADS;
+      reminders      = JSON.parse(localStorage.getItem("tdg_reminders"))      || DEFAULT_REMINDERS;
+      pipelineStages = JSON.parse(localStorage.getItem("tdg_pipeline_stages"))|| [...DEFAULT_STAGES];
     } catch(e2) {
       leads = DEFAULT_LEADS; reminders = DEFAULT_REMINDERS; pipelineStages = [...DEFAULT_STAGES];
     }
@@ -692,19 +675,19 @@ async function loadData() {
 }
 
 function save() {
-  // Local backup always
   try {
     localStorage.setItem("tdg_leads",           JSON.stringify(leads));
     localStorage.setItem("tdg_reminders",        JSON.stringify(reminders));
     localStorage.setItem("tdg_pipeline_stages",  JSON.stringify(pipelineStages));
   } catch(e) {}
 
-  if (!fbReady || !db) return;
+  if (!fbReady || !db || !window._fbDb) return;
   clearTimeout(saveTimeout);
   setSyncStatus("syncing", "⟳ Saving...");
   saveTimeout = setTimeout(async () => {
     try {
-      await db.collection("crm").doc("data").set({ leads, reminders, pipelineStages });
+      const { doc, setDoc } = window._fbDb;
+      await setDoc(doc(db, "crm", "data"), { leads, reminders, pipelineStages });
       setSyncStatus("ok", "● Live");
     } catch(e) {
       console.error("Save error:", e);
@@ -1700,7 +1683,8 @@ async function doLogin() {
   const pass  = document.getElementById('la-pass').value;
   if (!email || !pass) return setLoginErr('Please enter email and password.');
   try {
-    await firebase.auth().signInWithEmailAndPassword(email, pass);
+    const { signInWithEmailAndPassword } = window._fbAuth;
+    await signInWithEmailAndPassword(auth, email, pass);
   } catch(e) {
     if (e.code === 'auth/user-not-found') setLoginErr('No account found. Click "Create admin account".');
     else if (e.code === 'auth/wrong-password') setLoginErr('Incorrect password.');
@@ -1714,8 +1698,10 @@ async function doSignup() {
   if (!email || !pass) return setLoginErr('Enter an email and password to create account.');
   if (pass.length < 6) return setLoginErr('Password must be at least 6 characters.');
   try {
-    const cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
-    await db.collection('users').doc(cred.user.uid).set({ role:'admin', email });
+    const { createUserWithEmailAndPassword } = window._fbAuth;
+    const { doc, setDoc } = window._fbDb;
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await setDoc(doc(db, 'users', cred.user.uid), { role:'admin', email });
   } catch(e) { setLoginErr(e.message); }
 }
 
@@ -1724,7 +1710,8 @@ async function doClientLogin() {
   const pass  = document.getElementById('lc-pass').value;
   if (!email || !pass) return setLoginErr('Please enter email and password.');
   try {
-    await firebase.auth().signInWithEmailAndPassword(email, pass);
+    const { signInWithEmailAndPassword } = window._fbAuth;
+    await signInWithEmailAndPassword(auth, email, pass);
   } catch(e) {
     if (e.code === 'auth/user-not-found') setLoginErr('No client account. Click "Create account".');
     else if (e.code === 'auth/wrong-password') setLoginErr('Incorrect password.');
@@ -1738,33 +1725,36 @@ async function doClientSignup() {
   if (!email || !pass) return setLoginErr('Enter email and password.');
   if (pass.length < 6) return setLoginErr('Password must be at least 6 characters.');
   try {
-    const cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
-    await db.collection('users').doc(cred.user.uid).set({ role:'client', email });
+    const { createUserWithEmailAndPassword } = window._fbAuth;
+    const { doc, setDoc } = window._fbDb;
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await setDoc(doc(db, 'users', cred.user.uid), { role:'client', email });
   } catch(e) { setLoginErr(e.message); }
 }
 
 async function doLogout() {
-  if (auth) await firebase.auth().signOut();
-  else { startOffline(); }
+  if (auth && window._fbAuth) {
+    await window._fbAuth.signOut(auth);
+  } else { startOffline(); }
 }
 
 // Auth state observer — drives everything
 function initAuth() {
-  if (!auth) { startOffline(); return; }
-  firebase.auth().onAuthStateChanged(async (user) => {
+  if (!auth || !window._fbAuth) { startOffline(); return; }
+  const { onAuthStateChanged } = window._fbAuth;
+  const { doc, getDoc, onSnapshot } = window._fbDb;
+  onAuthStateChanged(auth, async (user) => {
     if (!user) {
-      // Show login
       document.getElementById('login-screen').style.display = 'flex';
-      document.getElementById('app').style.display = 'none'; // hide CRM
+      document.getElementById('app').style.display = 'none';
       document.getElementById('client-portal').style.display = 'none';
       currentUser = null; currentRole = null;
       return;
     }
     currentUser = user;
-    // Look up role
     try {
-      const snap = await db.collection('users').doc(user.uid).get();
-      currentRole = snap.exists ? snap.data().role : 'admin';
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      currentRole = snap.exists() ? snap.data().role : 'admin';
     } catch(e) { currentRole = 'admin'; }
 
     document.getElementById('login-screen').style.display = 'none';
@@ -2012,10 +2002,11 @@ function viewFullPhoto(id) {
 async function saveOrders() {
   try {
     localStorage.setItem('tdg_orders', JSON.stringify(orders));
-    if (fbReady && db) {
+    if (fbReady && db && window._fbDb) {
       clearTimeout(window._orderSaveTO);
-      window._orderSaveTO = setTimeout(async()=>{
-        await db.collection('crm').doc('orders').set({ orders });
+      window._orderSaveTO = setTimeout(async () => {
+        const { doc, setDoc } = window._fbDb;
+        await setDoc(doc(db, 'crm', 'orders'), { orders });
       }, 600);
     }
   } catch(e) { console.error('saveOrders error', e); }
@@ -2023,12 +2014,16 @@ async function saveOrders() {
 
 async function loadOrders() {
   try {
-    if (fbReady && db) {
-      const snap = await db.collection('crm').doc('orders').get();
-      orders = snap.exists ? (snap.data().orders||[]) : [];
-      // Live listener
-      db.collection('crm').doc('orders').onSnapshot(snap=>{
-        if(snap.exists){ orders = snap.data().orders||[]; if(activeTab==='Orders') renderOrders(); renderClientPortal(); }
+    if (fbReady && db && window._fbDb) {
+      const { doc, getDoc, onSnapshot } = window._fbDb;
+      const snap = await getDoc(doc(db, 'crm', 'orders'));
+      orders = snap.exists() ? (snap.data().orders || []) : [];
+      onSnapshot(doc(db, 'crm', 'orders'), snap => {
+        if (snap.exists()) {
+          orders = snap.data().orders || [];
+          if (activeTab === 'Orders') renderOrders();
+          if (currentRole === 'client') renderClientPortal();
+        }
       });
     } else {
       const lo = localStorage.getItem('tdg_orders');
@@ -2183,7 +2178,22 @@ function startOffline() {
   if (ls) ls.style.display = 'none';
   renderDashboard();
 }
-
+// ── Expose all functions globally (required for type="module" + onclick handlers) ──
+const _globals = {
+  switchTab, renderTab, selectLead, callLead, openEditModal, deleteLead, saveEditModal, closeEditModal,
+  panelUpdateStatus, panelUpdateNotes, addPanelActivity, addPanelReminder, togglePanelReminder,
+  updateLeadStatus, showAddLeadForm, addLeadSubmit,
+  startDialer, dialNext, dialerNoteUpdate, dialerDisposition,
+  setReminderFilter, addReminder, toggleReminder, deleteReminder,
+  renderPipeline, pipeDragStart, pipeDragEnd, pipeDragOver, pipeDragLeave, pipeDrop,
+  startEditStageTitle, addPipelineColumn, addLeadToStage,
+  calcUpdate, copyQuote,
+  setOrderFilter, openNewOrderModal, submitNewOrder, advanceOrder,
+  openDeliveryModal, previewDeliveryPhoto, confirmDelivery, openOrderNoteModal, deleteOrder, viewFullPhoto,
+  setLoginTab, doLogin, doSignup, doClientLogin, doClientSignup, doLogout, toggleAddLead,
+  startOffline, exportBackup,
+};
+Object.assign(window, _globals);
 
 </script>
 </body>
