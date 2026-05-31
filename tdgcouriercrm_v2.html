@@ -1,0 +1,2138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TDG Courier CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0b1422; color: #e2eaf5; font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+  input, select, textarea, button { font-family: 'DM Sans', sans-serif; }
+  button { cursor: pointer; }
+
+  /* ── Layout ── */
+  #app { display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* ── Header ── */
+  #header {
+    background: #0d1a2b;
+    border-bottom: 1px solid #1a2f47;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 54px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo-box { background: #c0392b; border-radius: 7px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; color: #fff; flex-shrink: 0; }
+  .logo-text-main { font-weight: 700; font-size: 13px; line-height: 1.2; }
+  .logo-text-sub { font-size: 9px; color: #4a7aad; letter-spacing: 0.08em; text-transform: uppercase; }
+  .spacer { flex: 1; }
+  .tab-btn { background: transparent; color: #6b8aad; border: none; border-radius: 6px; padding: 5px 12px; font-size: 12px; font-weight: 400; position: relative; transition: all 0.15s; }
+  .tab-btn.active { background: #1a2f47; color: #5eb8ff; font-weight: 600; }
+  .tab-dot { position: absolute; top: 1px; right: 1px; background: #c0392b; border-radius: 50%; width: 8px; height: 8px; }
+  .btn-csv { background: transparent; color: #5eb8ff; border: 1px solid #1e3048; border-radius: 8px; padding: 5px 10px; font-size: 11px; }
+  #upload-msg { color: #4ade80; font-size: 11px; }
+
+  /* ── Content ── */
+  #content { padding: 20px; flex: 1; }
+
+  /* ── Stat Cards ── */
+  .stat-cards { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .stat-card { background: #151f2e; border: 1px solid #1e3048; border-radius: 12px; padding: 18px 20px; flex: 1; min-width: 120px; }
+  .stat-icon { font-size: 20px; margin-bottom: 4px; }
+  .stat-value { font-size: 26px; font-weight: 700; }
+  .stat-label { font-size: 12px; color: #6b8aad; margin-top: 2px; }
+
+  /* ── Badge ── */
+  .badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.03em; text-transform: uppercase; }
+
+  /* ── Card ── */
+  .card { background: #151f2e; border: 1px solid #1e3048; border-radius: 12px; }
+
+  /* ── Inputs ── */
+  .inp { width: 100%; background: #0e1826; border: 1px solid #1e3048; border-radius: 8px; color: #e2eaf5; padding: 9px 12px; font-size: 13px; outline: none; font-family: 'DM Sans', sans-serif; }
+  .inp:focus { border-color: #2a4a8a; }
+  textarea.inp { resize: vertical; }
+
+  /* ── Buttons ── */
+  .btn-primary { background: #c0392b; color: #fff; border: none; border-radius: 8px; padding: 9px 20px; font-size: 13px; font-weight: 600; font-family: 'DM Sans', sans-serif; }
+  .btn-secondary { background: transparent; color: #5eb8ff; border: 1px solid #1e3048; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-family: 'DM Sans', sans-serif; }
+  .btn-small-call { background: #c0392b; color: #fff; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 600; font-family: 'DM Sans', sans-serif; }
+  .btn-icon { background: transparent; border: 1px solid #1e3048; color: #5eb8ff; border-radius: 5px; padding: 3px 8px; font-size: 10px; font-family: 'DM Sans', sans-serif; }
+
+  /* ── Section title ── */
+  .section-title { font-size: 20px; font-weight: 700; margin-bottom: 16px; }
+
+  /* ── Dashboard ── */
+  .dash-grid { display: flex; gap: 14px; flex-wrap: wrap; }
+  .recent-leads { padding: 18px; flex: 1; min-width: 260px; }
+  .recent-lead-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid #1a2f47; cursor: pointer; }
+  .avatar { border-radius: 50%; background: #1a2f47; display: flex; align-items: center; justify-content: center; font-weight: 600; color: #5eb8ff; flex-shrink: 0; }
+  .quick-actions { padding: 18px; min-width: 200px; flex: 0 0 auto; }
+  .quick-actions .btn-secondary { text-align: left; padding: 9px 14px; font-size: 12px; display: block; width: 100%; margin-bottom: 8px; }
+  .today-reminders-card { padding: 18px; flex: 1; min-width: 220px; background: #1a2d1a; border-color: #2a5c2a; }
+
+  /* ── Leads table ── */
+  .leads-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .leads-controls { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .leads-layout { display: flex; gap: 14px; }
+  .leads-table-wrap { flex: 1; min-width: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { padding: 11px 13px; text-align: left; color: #6b8aad; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #1e3048; }
+  td { padding: 10px 13px; border-bottom: 1px solid #111d2b; }
+  tr.lead-row { cursor: pointer; transition: background 0.12s; }
+  tr.lead-row:hover { background: #131e2e; }
+  tr.lead-row.selected { background: #1a2f47; }
+  .no-leads { padding: 40px; text-align: center; color: #6b8aad; }
+
+  /* ── Lead Panel ── */
+  #lead-panel { width: 300px; background: #151f2e; border: 1px solid #1e3048; border-radius: 12px; flex-shrink: 0; align-self: flex-start; max-height: 85vh; overflow-y: auto; }
+  .panel-sticky { padding: 16px 16px 12px; position: sticky; top: 0; background: #151f2e; z-index: 1; border-bottom: 1px solid #1a2f47; }
+  .panel-body { padding: 12px 16px; }
+  .panel-label { font-size: 10px; color: #6b8aad; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .activity-feed { margin-top: 14px; }
+  .activity-entry { display: flex; gap: 8px; margin-bottom: 10px; align-items: flex-start; }
+  .activity-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+  .activity-text { font-size: 12px; color: #c5d8ee; line-height: 1.4; }
+  .activity-ts { font-size: 10px; color: #4a6a8a; margin-top: 2px; }
+  .reminder-form { background: #0e1826; border: 1px solid #1e3048; border-radius: 8px; padding: 12px; margin-top: 10px; }
+
+  /* ── Add Lead form ── */
+  .add-lead-form { background: #151f2e; border: 1px solid #1e3048; border-radius: 12px; padding: 18px; margin-bottom: 16px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .form-field label { font-size: 11px; color: #6b8aad; display: block; margin-bottom: 4px; }
+
+  /* ── Dialer ── */
+  .dialer-layout { display: flex; gap: 14px; flex-wrap: wrap; }
+  .dialer-card { background: #151f2e; border: 2px solid #c0392b; border-radius: 16px; padding: 24px; text-align: center; flex: 1; min-width: 260px; }
+  .dialer-idle { background: #151f2e; border: 1px solid #1e3048; border-radius: 16px; padding: 28px; text-align: center; }
+  .dialer-avatar { width: 64px; height: 64px; border-radius: 50%; background: #c0392b22; border: 2px solid #c0392b; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; color: #e84040; margin: 0 auto 14px; }
+  .uncalled-list { flex: 1; min-width: 220px; }
+  .uncalled-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid #111d2b; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── Pipeline ── */
+  .pipeline-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; }
+  .pipeline-col { min-width: 175px; max-width: 195px; flex-shrink: 0; }
+  .pipeline-header { border-radius: 8px 8px 0 0; padding: 7px 12px; display: flex; justify-content: space-between; align-items: center; }
+  .pipeline-body { background: #151f2e; border: 1px solid #1e3048; border-top: none; border-radius: 0 0 8px 8px; min-height: 60px; }
+  .pipeline-card { padding: 10px 12px; border-bottom: 1px solid #111d2b; }
+  .pipeline-card-actions { display: flex; gap: 5px; margin-top: 7px; }
+  .pipeline-select { background: #0e1826; border: 1px solid #1e3048; border-radius: 5px; color: #8baabf; font-size: 9px; padding: 3px 2px; font-family: 'DM Sans', sans-serif; flex: 1; }
+
+  /* ── Calendar ── */
+  .cal-layout { display: flex; gap: 16px; flex-wrap: wrap; }
+  .mini-cal { background: #151f2e; border: 1px solid #1e3048; border-radius: 12px; padding: 16px; min-width: 260px; }
+  .cal-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+  .cal-day-hdr { font-size: 10px; color: #6b8aad; padding: 4px 0; font-weight: 600; }
+  .cal-cell { padding: 4px 2px; border-radius: 6px; position: relative; }
+  .cal-cell.today { background: #1a3a5c; }
+  .cal-cell span { font-size: 12px; font-weight: 400; color: #c5d8ee; }
+  .cal-cell.today span { color: #5eb8ff; font-weight: 700; }
+  .cal-dot { width: 5px; height: 5px; border-radius: 50%; background: #c0392b; margin: 1px auto 0; }
+  .reminder-list { flex: 1; min-width: 260px; }
+  .filter-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+  .filter-tab { font-size: 11px; padding: 5px 12px; background: transparent; color: #6b8aad; border: 1px solid #1e3048; border-radius: 8px; text-transform: capitalize; font-family: 'DM Sans', sans-serif; }
+  .filter-tab.active { background: #1a2f47; color: #5eb8ff; }
+  .reminder-card { background: #151f2e; border: 1px solid #1e3048; border-radius: 10px; padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start; margin-bottom: 8px; }
+  .reminder-card.done-card { border-color: #1a2530; opacity: 0.55; }
+  .today-banner { background: #1a3a5c; border: 1px solid #2a5a8c; border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; }
+  .new-reminder-form { background: #151f2e; border: 1px solid #1e3048; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .new-reminder-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+
+  /* ── Calculator ── */
+  .calc-layout { display: flex; gap: 16px; flex-wrap: wrap; }
+  .calc-inputs { flex: 1; min-width: 280px; }
+  .calc-output { flex: 1; min-width: 260px; }
+  .slider-row { margin-bottom: 16px; }
+  .slider-row-header { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; color: #c5d8ee; }
+  .slider-val { font-weight: 600; color: #5eb8ff; }
+  input[type=range] { width: 100%; accent-color: #c0392b; }
+  input[type=checkbox] { accent-color: #c0392b; cursor: pointer; }
+  .check-row { display: flex; gap: 16px; margin-top: 6px; }
+  .check-label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #c5d8ee; cursor: pointer; }
+  .rate-breakdown-line { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #111d2b; font-size: 13px; }
+  .rate-total-row { display: flex; justify-content: space-between; padding: 14px 0 6px; margin-top: 4px; }
+  .quote-pre { background: #0e1826; border-radius: 8px; padding: 12px; margin-top: 12px; }
+  .quote-pre pre { font-size: 11px; color: #6b8aad; white-space: pre-wrap; font-family: monospace; line-height: 1.6; }
+  .rate-cards { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+  .rate-card-item { flex: 1; min-width: 140px; background: #0e1826; border: 1px solid #1e3048; border-radius: 8px; padding: 10px 12px; cursor: pointer; transition: all 0.15s; }
+  .rate-card-item.selected { background: #1a2f47; border-color: #2a4a8a; }
+  .rate-card-item .rc-name { font-size: 12px; font-weight: 600; color: #c5d8ee; margin-bottom: 4px; }
+  .rate-card-item.selected .rc-name { color: #5eb8ff; }
+  .rate-card-item .rc-detail { font-size: 11px; color: #6b8aad; }
+
+  /* ── Utility ── */
+  .hidden { display: none !important; }
+  .flex-row { display: flex; gap: 8px; }
+  .flex-row-center { display: flex; align-items: center; gap: 8px; }
+  .section-label-upper { font-size: 10px; color: #6b8aad; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-bottom: 10px; }
+
+  /* ── Drag & Drop ── */
+  .pipeline-card { cursor: grab; transition: opacity 0.15s, box-shadow 0.15s; }
+  .pipeline-card:active { cursor: grabbing; }
+  .pipeline-card.dragging { opacity: 0.4; }
+  .pipeline-body.drag-over { background: #1a2f47; outline: 2px dashed #2a5a8c; outline-offset: -4px; }
+  .pipeline-col-add-btn { width: 100%; background: transparent; border: 1px dashed #1e3048; color: #4a6a8a; border-radius: 6px; padding: 6px; font-size: 11px; margin-top: 6px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+  .pipeline-col-add-btn:hover { border-color: #2a5a8c; color: #5eb8ff; background: #0d1a2b; }
+  .pipeline-col-header-edit { background: none; border: none; color: #4a6a8a; cursor: pointer; font-size: 12px; padding: 0 2px; display: none; }
+  .pipeline-header:hover .pipeline-col-header-edit { display: inline; }
+  .pipeline-header-title-input { background: transparent; border: none; border-bottom: 1px solid #5eb8ff; color: #e2eaf5; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; outline: none; width: 100%; font-family: 'DM Sans', sans-serif; }
+
+  /* ── Lead Edit / Modal ── */
+  .modal-overlay { position: fixed; inset: 0; background: #000a; z-index: 999; display: flex; align-items: center; justify-content: center; }
+  .modal-box { background: #151f2e; border: 1px solid #1e3048; border-radius: 14px; width: 520px; max-width: 96vw; max-height: 90vh; overflow-y: auto; padding: 24px; }
+  .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; }
+  .modal-close { background: none; border: none; color: #6b8aad; font-size: 22px; cursor: pointer; line-height: 1; }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+  .modal-field label { font-size: 11px; color: #6b8aad; display: block; margin-bottom: 4px; }
+
+  /* ── Pipeline add-column btn ── */
+  .pipeline-add-col { min-width: 140px; flex-shrink: 0; display: flex; align-items: flex-start; padding-top: 2px; }
+  .pipeline-add-col-btn { background: transparent; border: 2px dashed #1e3048; border-radius: 8px; color: #4a6a8a; font-size: 12px; padding: 12px 16px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; width: 100%; }
+  .pipeline-add-col-btn:hover { border-color: #2a5a8c; color: #5eb8ff; }
+
+  /* ── Login Screen ── */
+  #login-screen { position:fixed; inset:0; background:#0b1422; z-index:2000; display:flex; align-items:center; justify-content:center; }
+  .login-box { background:#151f2e; border:1px solid #1e3048; border-radius:18px; padding:40px 36px; width:400px; max-width:95vw; }
+  .login-logo { display:flex; align-items:center; gap:10px; margin-bottom:28px; justify-content:center; }
+  .login-logo-box { background:#c0392b; border-radius:10px; width:42px; height:42px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; color:#fff; }
+  .login-title { font-size:22px; font-weight:700; }
+  .login-sub { font-size:12px; color:#6b8aad; margin-top:2px; }
+  .login-tabs { display:flex; gap:6px; margin-bottom:24px; background:#0e1826; border-radius:10px; padding:4px; }
+  .login-tab { flex:1; padding:8px; border:none; border-radius:7px; font-size:13px; font-weight:500; cursor:pointer; font-family:'DM Sans',sans-serif; background:transparent; color:#6b8aad; transition:all 0.15s; }
+  .login-tab.active { background:#1a2f47; color:#5eb8ff; }
+  .login-field { margin-bottom:14px; }
+  .login-field label { font-size:11px; color:#6b8aad; display:block; margin-bottom:5px; text-transform:uppercase; letter-spacing:0.05em; }
+  .login-btn { width:100%; padding:12px; background:#c0392b; border:none; border-radius:10px; color:#fff; font-size:14px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; margin-top:8px; transition:background 0.15s; }
+  .login-btn:hover { background:#e74c3c; }
+  .login-err { color:#f87171; font-size:12px; margin-top:10px; text-align:center; min-height:18px; }
+  .login-switch { text-align:center; font-size:12px; color:#6b8aad; margin-top:16px; }
+  .login-switch a { color:#5eb8ff; cursor:pointer; text-decoration:none; }
+
+  /* ── Orders Tab ── */
+  .orders-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px; }
+  @media(max-width:700px){ .orders-grid { grid-template-columns:1fr; } }
+  .order-card { background:#151f2e; border:1px solid #1e3048; border-radius:14px; padding:18px; position:relative; }
+  .order-card:hover { border-color:#2a4a6a; }
+  .order-status-bar { display:flex; gap:6px; margin:14px 0 0; }
+  .order-step { flex:1; height:4px; border-radius:2px; background:#1e3048; transition:background 0.3s; }
+  .order-step.done { background:#4ade80; }
+  .order-step.active { background:#5eb8ff; }
+  .delivery-proof { margin-top:12px; background:#0e1826; border:1px solid #1e3048; border-radius:10px; padding:12px; }
+  .delivery-img { width:100%; max-height:200px; object-fit:cover; border-radius:8px; margin-top:8px; cursor:pointer; }
+  .order-timeline { margin-top:14px; border-top:1px solid #1e3048; padding-top:12px; }
+  .order-timeline-item { display:flex; gap:10px; font-size:12px; margin-bottom:8px; }
+  .order-tl-dot { width:8px; height:8px; border-radius:50%; background:#2a4a6a; flex-shrink:0; margin-top:3px; }
+  .order-tl-dot.done { background:#4ade80; }
+  .status-pill { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; text-transform:uppercase; letter-spacing:0.04em; }
+  .status-pill.pending    { background:#1a2f47; color:#5eb8ff; }
+  .status-pill.picked-up  { background:#2d2000; color:#fbbf24; }
+  .status-pill.in-transit { background:#1a2040; color:#a78bfa; }
+  .status-pill.delivered  { background:#0f2d1a; color:#4ade80; }
+  .status-pill.cancelled  { background:#2d1a1a; color:#f87171; }
+
+  /* ── Client Portal ── */
+  #client-portal { position:fixed; inset:0; background:#0b1422; z-index:1500; overflow-y:auto; display:none; }
+  .portal-header { background:#0d1a2b; border-bottom:1px solid #1a2f47; padding:14px 20px; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:10; }
+  .portal-content { padding:20px; max-width:700px; margin:0 auto; }
+  .portal-order { background:#151f2e; border:1px solid #1e3048; border-radius:16px; padding:20px; margin-bottom:16px; }
+  .portal-track { display:flex; align-items:center; gap:0; margin:16px 0; }
+  .portal-track-step { display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; }
+  .portal-track-circle { width:32px; height:32px; border-radius:50%; background:#1e3048; display:flex; align-items:center; justify-content:center; font-size:14px; border:2px solid #2a4a6a; transition:all 0.3s; }
+  .portal-track-circle.done { background:#0f2d1a; border-color:#4ade80; }
+  .portal-track-circle.active { background:#1a3a5c; border-color:#5eb8ff; animation:pulse 2s infinite; }
+  .portal-track-label { font-size:10px; color:#6b8aad; text-align:center; }
+  .portal-track-line { height:2px; background:#1e3048; flex:1; margin-top:-20px; align-self:flex-start; margin-top:14px; transition:background 0.3s; }
+  .portal-track-line.done { background:#4ade80; }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 #5eb8ff44} 50%{box-shadow:0 0 0 6px #5eb8ff00} }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- LOGIN SCREEN -->
+  <div id="login-screen">
+    <div class="login-box">
+      <div class="login-logo">
+        <div class="login-logo-box">TDG</div>
+        <div>
+          <div class="login-title">TDG Courier</div>
+          <div class="login-sub">Delivery Management</div>
+        </div>
+      </div>
+      <div class="login-tabs">
+        <button class="login-tab active" onclick="setLoginTab('admin')">Admin / VA</button>
+        <button class="login-tab" onclick="setLoginTab('client')">Client Portal</button>
+      </div>
+      <div id="login-admin-fields">
+        <div class="login-field"><label>Email</label><input class="inp" id="la-email" type="email" placeholder="admin@tdgcourier.com" /></div>
+        <div class="login-field"><label>Password</label><input class="inp" id="la-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" /></div>
+        <button class="login-btn" onclick="doLogin()">Sign In →</button>
+        <div style="text-align:center;margin-top:12px;font-size:11px;color:#6b8aad;">
+          No account? <a style="color:#5eb8ff;cursor:pointer;" onclick="doSignup()">Create admin account</a>
+        </div>
+      </div>
+      <div id="login-client-fields" style="display:none;">
+        <div class="login-field"><label>Email</label><input class="inp" id="lc-email" type="email" placeholder="your@email.com" /></div>
+        <div class="login-field"><label>Password</label><input class="inp" id="lc-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doClientLogin()" /></div>
+        <button class="login-btn" onclick="doClientLogin()">View My Deliveries →</button>
+        <div style="text-align:center;margin-top:12px;font-size:11px;color:#6b8aad;">
+          New client? <a style="color:#5eb8ff;cursor:pointer;" onclick="doClientSignup()">Create account</a>
+        </div>
+      </div>
+      <div class="login-err" id="login-err"></div>
+    </div>
+  </div>
+
+  <!-- CLIENT PORTAL -->
+  <div id="client-portal">
+    <div class="portal-header">
+      <div class="login-logo-box" style="width:32px;height:32px;font-size:13px;">TDG</div>
+      <div>
+        <div style="font-weight:700;font-size:14px;">TDG Courier — My Deliveries</div>
+        <div id="portal-user-email" style="font-size:11px;color:#6b8aad;"></div>
+      </div>
+      <div style="flex:1;"></div>
+      <button class="btn-csv" onclick="doLogout()">Sign Out</button>
+    </div>
+    <div class="portal-content">
+      <div id="portal-orders-list"></div>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <div id="header">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="logo-box">TDG</div>
+      <div>
+        <div class="logo-text-main">TDG Courier</div>
+        <div class="logo-text-sub">CRM</div>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <button class="tab-btn active" data-tab="Dashboard">Dashboard</button>
+    <button class="tab-btn" data-tab="Leads">Leads</button>
+    <button class="tab-btn" data-tab="Dialer">Dialer</button>
+    <button class="tab-btn" data-tab="Pipeline">Pipeline</button>
+    <button class="tab-btn" data-tab="Orders">📦 Orders</button>
+    <button class="tab-btn" id="cal-tab-btn" data-tab="Calendar">Calendar</button>
+    <button class="tab-btn" data-tab="Calculator">Calculator</button>
+    <button class="btn-csv" onclick="document.getElementById('csv-input').click()">📥 CSV</button>
+    <button class="btn-csv" onclick="exportBackup()" title="Download full backup">💾 Backup</button>
+    <span id="sync-status" style="font-size:11px;color:#6b8aad;">● Connecting...</span>
+    <span id="header-user" style="font-size:11px;color:#6b8aad;"></span>
+    <button class="btn-csv" onclick="doLogout()" style="color:#f87171;border-color:#3d1a1a;">Sign Out</button>
+    <input type="file" id="csv-input" accept=".csv" style="display:none" />
+    <span id="upload-msg"></span>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="content">
+
+    <!-- DASHBOARD -->
+    <div id="tab-Dashboard">
+      <div class="section-title">Overview</div>
+      <div class="stat-cards" id="stat-cards"></div>
+      <div class="dash-grid">
+        <div class="card recent-leads">
+          <div style="font-weight:600;margin-bottom:12px;font-size:14px;">Recent Leads</div>
+          <div id="recent-leads-list"></div>
+        </div>
+        <div class="card quick-actions">
+          <div style="font-weight:600;margin-bottom:12px;font-size:14px;">Quick Actions</div>
+          <button class="btn-secondary" onclick="startDialer()">📞 Start Dialer</button>
+          <button class="btn-secondary" onclick="switchTab('Leads');showAddLeadForm()">➕ Add Lead</button>
+          <button class="btn-secondary" onclick="document.getElementById('csv-input').click()">📥 Import CSV</button>
+          <button class="btn-secondary" onclick="switchTab('Pipeline')">📊 Pipeline</button>
+          <button class="btn-secondary" onclick="switchTab('Calendar')">⏰ Reminders</button>
+          <button class="btn-secondary" onclick="switchTab('Calculator')">💰 Calculator</button>
+        </div>
+        <div id="today-rem-dash" class="card today-reminders-card hidden">
+          <div style="font-weight:600;margin-bottom:12px;font-size:14px;color:#4ade80;">⏰ Today's Reminders</div>
+          <div id="today-rem-dash-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEADS -->
+    <div id="tab-Leads" class="hidden">
+      <div class="leads-header">
+        <div class="section-title" style="margin-bottom:0;">Leads</div>
+        <div class="flex-row">
+          <button class="btn-primary" style="font-size:12px;padding:7px 14px;" onclick="startDialer()">📞 Dialer</button>
+          <button class="btn-secondary" style="font-size:12px;padding:7px 14px;" onclick="toggleAddLead()">➕ Add</button>
+        </div>
+      </div>
+      <div class="leads-controls">
+        <input class="inp" id="search-input" placeholder="Search..." style="width:220px;" oninput="renderLeadsTable()" />
+        <select class="inp" id="status-filter" style="width:140px;cursor:pointer;" onchange="renderLeadsTable()">
+          <option value="All">All Statuses</option>
+          <option>Dialer Queue</option><option>New</option><option>Contacted</option><option>Qualified</option><option>Proposal</option><option>Won</option><option>Lost</option>
+        </select>
+      </div>
+      <div id="add-lead-form" class="add-lead-form hidden">
+        <div style="font-weight:600;margin-bottom:12px;">Add New Lead</div>
+        <div class="form-grid">
+          <div class="form-field"><label>Name *</label><input class="inp" id="nl-name" /></div>
+          <div class="form-field"><label>Company</label><input class="inp" id="nl-company" /></div>
+          <div class="form-field"><label>Phone *</label><input class="inp" id="nl-phone" /></div>
+          <div class="form-field"><label>Email</label><input class="inp" id="nl-email" /></div>
+          <div class="form-field"><label>Est. Value</label><input class="inp" id="nl-value" /></div>
+          <div class="form-field"><label>Status</label>
+            <select class="inp" id="nl-status">
+              <option>New</option><option>Contacted</option><option>Qualified</option><option>Proposal</option><option>Won</option><option>Lost</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:10px;"><label style="font-size:11px;color:#6b8aad;display:block;margin-bottom:4px;">Notes</label><textarea class="inp" id="nl-notes" style="height:56px;"></textarea></div>
+        <div class="flex-row" style="margin-top:12px;">
+          <button class="btn-primary" onclick="addLeadSubmit()">Save Lead</button>
+          <button class="btn-secondary" onclick="toggleAddLead()">Cancel</button>
+        </div>
+      </div>
+      <div class="leads-layout">
+        <div class="leads-table-wrap">
+          <div class="card" style="overflow:hidden;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th><th>Company</th><th>Phone</th><th>Status</th><th>Last Activity</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="leads-tbody"></tbody>
+            </table>
+            <div id="no-leads" class="no-leads hidden">No leads found</div>
+          </div>
+        </div>
+        <div id="lead-panel" class="hidden"></div>
+      </div>
+    </div>
+
+    <!-- DIALER -->
+    <div id="tab-Dialer" class="hidden">
+      <div class="section-title">Power Dialer</div>
+      <div class="dialer-layout">
+        <div style="flex:1;min-width:260px;" id="dialer-main"></div>
+        <div class="uncalled-list">
+          <div class="card" style="padding:14px;">
+            <div class="section-label-upper">Uncalled Leads</div>
+            <div id="uncalled-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PIPELINE -->
+    <div id="tab-Pipeline" class="hidden">
+      <div class="section-title">Sales Pipeline</div>
+      <div class="pipeline-scroll" id="pipeline-cols"></div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div id="tab-Calendar" class="hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div class="section-title" style="margin-bottom:0;">Reminder Calendar</div>
+        <button class="btn-primary" style="font-size:12px;padding:7px 14px;" onclick="toggleNewReminderForm()">+ Add Reminder</button>
+      </div>
+      <div id="today-banner" class="today-banner hidden"></div>
+      <div id="new-reminder-form" class="new-reminder-form hidden">
+        <div style="font-weight:600;font-size:13px;margin-bottom:12px;">New Reminder</div>
+        <div class="new-reminder-grid">
+          <div><div style="font-size:11px;color:#6b8aad;margin-bottom:4px;">Linked Lead (optional)</div>
+            <select class="inp" id="nr-lead" style="font-size:12px;"></select></div>
+          <div><div style="font-size:11px;color:#6b8aad;margin-bottom:4px;">Date</div>
+            <input type="date" class="inp" id="nr-date" style="font-size:12px;" /></div>
+          <div><div style="font-size:11px;color:#6b8aad;margin-bottom:4px;">Time</div>
+            <input type="time" class="inp" id="nr-time" style="font-size:12px;" value="09:00" /></div>
+          <div><div style="font-size:11px;color:#6b8aad;margin-bottom:4px;">Note</div>
+            <input class="inp" id="nr-text" placeholder="e.g. Follow up on quote" style="font-size:12px;" /></div>
+        </div>
+        <div class="flex-row">
+          <button class="btn-primary" onclick="addReminder()">Save Reminder</button>
+          <button class="btn-secondary" onclick="toggleNewReminderForm()">Cancel</button>
+        </div>
+      </div>
+      <div class="cal-layout">
+        <div class="mini-cal">
+          <div class="cal-nav">
+            <button class="btn-secondary" style="padding:4px 10px;font-size:14px;" onclick="changeMonth(-1)">‹</button>
+            <span id="cal-month-label" style="font-weight:600;font-size:14px;"></span>
+            <button class="btn-secondary" style="padding:4px 10px;font-size:14px;" onclick="changeMonth(1)">›</button>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
+        <div class="reminder-list">
+          <div class="filter-tabs">
+            <button class="filter-tab active" data-filter="upcoming" onclick="setReminderFilter('upcoming')">Upcoming</button>
+            <button class="filter-tab" data-filter="done" onclick="setReminderFilter('done')">Done</button>
+            <button class="filter-tab" data-filter="all" onclick="setReminderFilter('all')">All</button>
+          </div>
+          <div id="reminder-list-items"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALCULATOR -->
+    <div id="tab-Calculator" class="hidden">
+      <div class="section-title">Courier Rate Calculator</div>
+      <div class="calc-layout">
+        <div class="calc-inputs">
+          <div class="card" style="padding:20px;">
+            <div class="section-label-upper">Job Details</div>
+            <div style="margin-bottom:14px;">
+              <label style="font-size:13px;color:#c5d8ee;display:block;margin-bottom:6px;">Service Type</label>
+              <select class="inp" id="calc-service" style="font-size:13px;" onchange="calcUpdate()">
+                <option value="standard">Standard (Next Day)</option>
+                <option value="express">Express (Same Day)</option>
+                <option value="scheduled">Scheduled Route</option>
+                <option value="overnight">Overnight</option>
+                <option value="medical">Medical / Priority</option>
+              </select>
+            </div>
+            <div class="slider-row">
+              <div class="slider-row-header"><span>Distance</span><span class="slider-val" id="lbl-distance">15 miles</span></div>
+              <input type="range" id="calc-distance" min="1" max="200" value="15" oninput="calcUpdate()" />
+            </div>
+            <div class="slider-row">
+              <div class="slider-row-header"><span>Package Weight</span><span class="slider-val" id="lbl-weight">10 lbs</span></div>
+              <input type="range" id="calc-weight" min="1" max="500" value="10" oninput="calcUpdate()" />
+            </div>
+            <div class="slider-row">
+              <div class="slider-row-header"><span>Number of Stops</span><span class="slider-val" id="lbl-stops">1 stops</span></div>
+              <input type="range" id="calc-stops" min="1" max="20" value="1" oninput="calcUpdate()" />
+            </div>
+            <div class="slider-row">
+              <div class="slider-row-header"><span>Package Count</span><span class="slider-val" id="lbl-packages">1 pkgs</span></div>
+              <input type="range" id="calc-packages" min="1" max="50" value="1" oninput="calcUpdate()" />
+            </div>
+            <div class="check-row">
+              <label class="check-label"><input type="checkbox" id="calc-hazmat" onchange="calcUpdate()" /> Hazmat (+$15)</label>
+              <label class="check-label"><input type="checkbox" id="calc-residential" onchange="calcUpdate()" /> Residential (+$5)</label>
+            </div>
+          </div>
+        </div>
+        <div class="calc-output">
+          <div class="card" style="padding:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <div class="section-label-upper" style="margin-bottom:0;">Rate Breakdown</div>
+              <div style="background:#c0392b22;border-radius:6px;padding:2px 8px;"><span id="service-badge" style="font-size:10px;color:#e84040;font-weight:600;"></span></div>
+            </div>
+            <div id="rate-lines"></div>
+            <div class="rate-total-row">
+              <span style="font-size:16px;font-weight:700;color:#e2eaf5;">Total</span>
+              <span id="calc-total" style="font-size:24px;font-weight:700;color:#4ade80;"></span>
+            </div>
+            <button id="copy-quote-btn" onclick="copyQuote()" style="width:100%;margin-top:12px;background:#1a2f47;border:1px solid #2a4a6a;color:#5eb8ff;border-radius:8px;padding:10px;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:600;">📋 Copy Quote</button>
+            <div class="quote-pre"><pre id="quote-text"></pre></div>
+          </div>
+          <div class="card rate-cards" style="padding:16px;margin-top:0;" id="rate-cards-wrap">
+            <div class="section-label-upper" style="margin-bottom:12px;width:100%;">All Service Rates</div>
+            <div class="rate-cards" id="rate-cards"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- ORDERS TAB (injected by renderOrders) -->
+  <div id="tab-Orders" style="display:none;padding:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+      <div class="section-title" style="margin:0;">📦 Orders & Deliveries</div>
+      <button class="btn-primary" onclick="openNewOrderModal()">+ New Order</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <button class="btn-secondary" onclick="setOrderFilter('all')"    id="of-all"       style="font-size:11px;padding:5px 12px;">All</button>
+      <button class="btn-secondary" onclick="setOrderFilter('pending')"    id="of-pending"   style="font-size:11px;padding:5px 12px;">Pending</button>
+      <button class="btn-secondary" onclick="setOrderFilter('picked-up')"  id="of-picked-up" style="font-size:11px;padding:5px 12px;">Picked Up</button>
+      <button class="btn-secondary" onclick="setOrderFilter('in-transit')" id="of-in-transit" style="font-size:11px;padding:5px 12px;">In Transit</button>
+      <button class="btn-secondary" onclick="setOrderFilter('delivered')"  id="of-delivered" style="font-size:11px;padding:5px 12px;">Delivered</button>
+    </div>
+    <div id="orders-grid" class="orders-grid"></div>
+  </div>
+</div><!-- /app -->
+
+<script>
+// ═══════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════
+const PIPELINE_STAGES = ["New","Contacted","Qualified","Proposal","Won","Lost"];
+let pipelineStages = ["New","Contacted","Qualified","Proposal","Won","Lost"];
+const STATUS_COLORS = {
+  "Dialer Queue": { bg: "#1a1a3a", text: "#a78bfa" },
+  New: { bg: "#1a3a5c", text: "#5eb8ff" },
+  Contacted: { bg: "#1a3d2b", text: "#4ade80" },
+  Qualified: { bg: "#3d2b00", text: "#fbbf24" },
+  Proposal: { bg: "#3d1a2e", text: "#f472b6" },
+  Won: { bg: "#0f3d2b", text: "#34d399" },
+  Lost: { bg: "#3d1a1a", text: "#f87171" },
+};
+const ACTIVITY_ICONS = { created:"🌱", call:"📞", note:"📝", status:"🔄", reminder:"⏰", email:"✉️" };
+const RATES = {
+  standard: { label:"Standard (Next Day)", base:55, perMile:2.75, perLb:0.25 },
+  express:  { label:"Express (Same Day)",   base:55, perMile:2.75, perLb:0.25 },
+  scheduled:{ label:"Scheduled Route",      base:55, perMile:2.75, perLb:0.25 },
+  overnight:{ label:"Overnight",            base:55, perMile:2.75, perLb:0.25 },
+  medical:  { label:"Medical / Priority",   base:55, perMile:2.75, perLb:0.25 },
+};
+
+const DEFAULT_LEADS = [
+  { id:1, name:"Marcus Webb",   company:"Webb Logistics",    phone:"2156734521", email:"marcus@webblogistics.com",   status:"New",       value:"$1,200/mo", notes:"",                    called:false, activity:[{type:"created",text:"Lead created",ts:"2025-05-28 09:00"}] },
+  { id:2, name:"Sandra Torres", company:"Torres Freight",    phone:"2672894100", email:"s.torres@torresfreight.com", status:"Contacted",  value:"$850/mo",   notes:"Left voicemail",       called:true,  activity:[{type:"created",text:"Lead created",ts:"2025-05-27 10:15"},{type:"call",text:"Called — left voicemail",ts:"2025-05-28 11:00"}] },
+  { id:3, name:"Devon Clarke",  company:"Clarke Med Supply", phone:"2154487832", email:"devon@clarkemed.com",        status:"Qualified",  value:"$2,400/mo", notes:"Interested in next-day",called:true,  activity:[{type:"created",text:"Lead created",ts:"2025-05-26 08:30"},{type:"call",text:"Called — interested in next-day service",ts:"2025-05-27 14:00"},{type:"status",text:"Status changed to Qualified",ts:"2025-05-27 14:05"}] },
+  { id:4, name:"Priya Nair",    company:"Nair E-Commerce",   phone:"6104521987", email:"priya@nairco.com",           status:"New",        value:"$600/mo",   notes:"",                    called:false, activity:[{type:"created",text:"Lead created",ts:"2025-05-29 13:00"}] },
+  { id:5, name:"James Okafor", company:"Okafor Auto Parts", phone:"2155639012", email:"j.okafor@okaforparts.com",  status:"Proposal",   value:"$3,100/mo", notes:"Sent quote",           called:true,  activity:[{type:"created",text:"Lead created",ts:"2025-05-25 09:00"},{type:"call",text:"Called — very interested",ts:"2025-05-26 10:00"},{type:"note",text:"Sent rate quote via email",ts:"2025-05-27 09:30"},{type:"status",text:"Status changed to Proposal",ts:"2025-05-27 09:31"}] },
+  { id:6, name:"Rachel Kim",   company:"Kim Retail Group",  phone:"4844230078", email:"rkim@kimretail.com",         status:"New",        value:"$975/mo",   notes:"",                    called:false, activity:[{type:"created",text:"Lead created",ts:"2025-05-29 15:00"}] },
+];
+const DEFAULT_REMINDERS = [
+  { id:1, leadId:2, leadName:"Sandra Torres", text:"Follow up on voicemail",       date:"2025-05-31", time:"10:00", done:false },
+  { id:2, leadId:3, leadName:"Devon Clarke",  text:"Send next-day pricing sheet",  date:"2025-05-30", time:"14:00", done:false },
+  { id:3, leadId:5, leadName:"James Okafor", text:"Check if quote was received",  date:"2025-06-02", time:"09:00", done:false },
+];
+const DEFAULT_STAGES = ["New","Contacted","Qualified","Proposal","Won","Lost"];
+
+// ─── Firebase config ───
+const firebaseConfig = {
+  apiKey: "AIzaSyC4Xi8RxbfrKpFg1ykm_yKBk24w0_f27ew",
+  authDomain: "tdg-courier.firebaseapp.com",
+  projectId: "tdg-courier",
+  storageBucket: "tdg-courier.firebasestorage.app",
+  messagingSenderId: "795443644033",
+  appId: "1:795443644033:web:b464b8f35ff63f7c286f80"
+};
+
+// ─── Firebase state ───
+let db = null, auth = null;
+let fbReady = false;
+let saveTimeout = null;
+
+function setSyncStatus(state, msg) {
+  const el = document.getElementById("sync-status");
+  if (!el) return;
+  const colors = { syncing:"#fbbf24", ok:"#4ade80", error:"#f87171", offline:"#6b8aad" };
+  el.style.color = colors[state] || "#6b8aad";
+  el.textContent = msg;
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement("script");
+    s.src = src;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error("Failed to load: " + src));
+    document.head.appendChild(s);
+  });
+}
+
+async function loadData() {
+  try {
+    setSyncStatus("syncing", "⟳ Connecting...");
+
+    // Load Firebase SDKs sequentially
+    const BASE = "https://www.gstatic.com/firebasejs/9.23.0";
+    await loadScript(BASE + "/firebase-app-compat.js");
+    await loadScript(BASE + "/firebase-firestore-compat.js");
+    await loadScript(BASE + "/firebase-auth-compat.js");
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    auth = firebase.auth();
+    fbReady = true;
+
+    const snap = await db.collection("crm").doc("data").get();
+    if (snap.exists) {
+      const d = snap.data();
+      leads          = d.leads          || DEFAULT_LEADS;
+      reminders      = d.reminders      || DEFAULT_REMINDERS;
+      pipelineStages = d.pipelineStages || [...DEFAULT_STAGES];
+    } else {
+      leads = DEFAULT_LEADS;
+      reminders = DEFAULT_REMINDERS;
+      pipelineStages = [...DEFAULT_STAGES];
+      await db.collection("crm").doc("data").set({ leads, reminders, pipelineStages });
+    }
+
+    setSyncStatus("ok", "● Live");
+
+    // Real-time listener — pushes changes from any VA to all open browsers
+    db.collection("crm").doc("data").onSnapshot((snap) => {
+      if (!snap.exists) return;
+      const d = snap.data();
+      leads          = d.leads          || leads;
+      reminders      = d.reminders      || reminders;
+      pipelineStages = d.pipelineStages || pipelineStages;
+      renderTab(activeTab);
+      setSyncStatus("ok", "● Live");
+    });
+
+  } catch(e) {
+    const msg = e && e.message ? e.message : String(e);
+    console.error("Firebase error:", msg, e);
+    setSyncStatus("error", "⚠ Offline: " + msg.slice(0,40));
+    // Fall back to localStorage so the app still works
+    try {
+      const sl = localStorage.getItem("tdg_leads");
+      const sr = localStorage.getItem("tdg_reminders");
+      const ss = localStorage.getItem("tdg_pipeline_stages");
+      leads          = sl ? JSON.parse(sl) : DEFAULT_LEADS;
+      reminders      = sr ? JSON.parse(sr) : DEFAULT_REMINDERS;
+      pipelineStages = ss ? JSON.parse(ss) : [...DEFAULT_STAGES];
+    } catch(e2) {
+      leads = DEFAULT_LEADS; reminders = DEFAULT_REMINDERS; pipelineStages = [...DEFAULT_STAGES];
+    }
+  }
+}
+
+function save() {
+  // Local backup always
+  try {
+    localStorage.setItem("tdg_leads",           JSON.stringify(leads));
+    localStorage.setItem("tdg_reminders",        JSON.stringify(reminders));
+    localStorage.setItem("tdg_pipeline_stages",  JSON.stringify(pipelineStages));
+  } catch(e) {}
+
+  if (!fbReady || !db) return;
+  clearTimeout(saveTimeout);
+  setSyncStatus("syncing", "⟳ Saving...");
+  saveTimeout = setTimeout(async () => {
+    try {
+      await db.collection("crm").doc("data").set({ leads, reminders, pipelineStages });
+      setSyncStatus("ok", "● Live");
+    } catch(e) {
+      console.error("Save error:", e);
+      setSyncStatus("error", "⚠ Save failed");
+    }
+  }, 600);
+}
+
+let leads          = [];
+let reminders      = [];
+
+let activeTab = "Dashboard";
+let selectedLeadId = null;
+let dialQueue = [];
+let dialIndex = 0;
+let dialerActive = false;
+let calViewMonth = { y: new Date().getFullYear(), m: new Date().getMonth() };
+let reminderFilter = "upcoming";
+
+// ═══════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════
+function nowStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+function pad(n){ return String(n).padStart(2,"0"); }
+function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function getLead(id){ return leads.find(l=>l.id===id); }
+function getStats() {
+  return {
+    total: leads.length,
+    new: leads.filter(l=>l.status==="New").length,
+    contacted: leads.filter(l=>l.status==="Contacted").length,
+    qualified: leads.filter(l=>l.status==="Qualified").length,
+    won: leads.filter(l=>l.status==="Won").length,
+    uncalled: leads.filter(l=>!l.called).length,
+  };
+}
+function todayRemCount(){ return reminders.filter(r=>r.date===todayStr()&&!r.done).length; }
+function badgeHTML(status){
+  const c = STATUS_COLORS[status]||STATUS_COLORS["New"];
+  return `<span class="badge" style="background:${c.bg};color:${c.text};">${esc(status)}</span>`;
+}
+
+// ═══════════════════════════════════════════
+//  TAB SWITCHING
+// ═══════════════════════════════════════════
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('[data-tab]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tab);
+  });
+  // Hide all tab panes (including Orders which is outside #content)
+  document.querySelectorAll('div[id^="tab-"]').forEach(el => {
+    el.style.display = el.id === `tab-${tab}` ? '' : 'none';
+  });
+  renderTab(tab);
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+function renderTab(tab){
+  if(tab==="Dashboard") renderDashboard();
+  else if(tab==="Leads") renderLeadsTable();
+  else if(tab==="Dialer") renderDialer();
+  else if(tab==="Pipeline") renderPipeline();
+  else if(tab==="Calendar") renderCalendar();
+  else if(tab==="Calculator") calcUpdate();
+  else if(tab==="Orders") renderOrders();
+}
+
+// ═══════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════
+function renderDashboard() {
+  const s = getStats();
+  const todayRem = todayRemCount();
+  const cards = [
+    {label:"Total Leads", value:s.total, icon:"📋", color:"#5eb8ff"},
+    {label:"New",          value:s.new,   icon:"🆕", color:"#60a5fa"},
+    {label:"Contacted",   value:s.contacted, icon:"📞", color:"#4ade80"},
+    {label:"Qualified",   value:s.qualified, icon:"⭐", color:"#fbbf24"},
+    {label:"Won",          value:s.won,   icon:"🏆", color:"#34d399"},
+    {label:"To Dial",     value:s.uncalled, icon:"🔔", color:"#f472b6"},
+    {label:"Today's Reminders", value:todayRem, icon:"⏰", color:"#fbbf24"},
+  ];
+  document.getElementById("stat-cards").innerHTML = cards.map(c=>
+    `<div class="stat-card"><div class="stat-icon">${c.icon}</div>
+     <div class="stat-value" style="color:${c.color};">${c.value}</div>
+     <div class="stat-label">${esc(c.label)}</div></div>`
+  ).join("");
+
+  const recentLeads = [...leads].slice(-5).reverse();
+  document.getElementById("recent-leads-list").innerHTML = recentLeads.map(l=>
+    `<div class="recent-lead-row" onclick="switchTab('Leads');selectLead(${l.id})">
+       <div class="avatar" style="width:30px;height:30px;font-size:12px;">${esc(l.name[0])}</div>
+       <div style="flex:1;">
+         <div style="font-size:13px;font-weight:500;">${esc(l.name)}</div>
+         <div style="font-size:11px;color:#6b8aad;">${esc(l.company)}</div>
+       </div>
+       ${badgeHTML(l.status)}
+     </div>`
+  ).join("");
+
+  const todayRems = reminders.filter(r=>r.date===todayStr()&&!r.done);
+  const todayCard = document.getElementById("today-rem-dash");
+  if(todayRems.length > 0){
+    todayCard.classList.remove("hidden");
+    document.getElementById("today-rem-dash-list").innerHTML = todayRems.map(r=>
+      `<div style="padding:6px 0;border-bottom:1px solid #1a3a1a;">
+         <div style="font-size:13px;">${esc(r.text)}</div>
+         ${r.leadName?`<div style="font-size:11px;color:#6b8aad;">👤 ${esc(r.leadName)}</div>`:""}
+         <div style="font-size:11px;color:#4ade80;">🕐 ${esc(r.time)}</div>
+       </div>`
+    ).join("");
+  } else {
+    todayCard.classList.add("hidden");
+  }
+
+  // calendar tab dot
+  const calBtn = document.getElementById("cal-tab-btn");
+  if(todayRem > 0){
+    if(!calBtn.querySelector('.tab-dot')){
+      const dot = document.createElement('span'); dot.className='tab-dot'; calBtn.appendChild(dot);
+    }
+  } else {
+    const dot = calBtn.querySelector('.tab-dot'); if(dot) dot.remove();
+  }
+}
+
+// ═══════════════════════════════════════════
+//  LEADS
+// ═══════════════════════════════════════════
+function getFilteredLeads() {
+  const search = (document.getElementById("search-input")||{value:""}).value.toLowerCase();
+  const status = (document.getElementById("status-filter")||{value:"All"}).value;
+  return leads.filter(l => {
+    const ms = l.name.toLowerCase().includes(search) || l.company.toLowerCase().includes(search) || l.phone.includes(search);
+    return ms && (status==="All" || l.status===status);
+  });
+}
+
+function renderLeadsTable() {
+  const filtered = getFilteredLeads();
+  const tbody = document.getElementById("leads-tbody");
+  const noLeads = document.getElementById("no-leads");
+  if(filtered.length === 0){
+    tbody.innerHTML = "";
+    noLeads.classList.remove("hidden");
+  } else {
+    noLeads.classList.add("hidden");
+    tbody.innerHTML = filtered.map(lead=>{
+      const lastAct = lead.activity&&lead.activity.length ? lead.activity[lead.activity.length-1] : null;
+      const selected = selectedLeadId===lead.id ? "selected" : "";
+      return `<tr class="lead-row ${selected}" onclick="selectLead(${lead.id})">
+        <td>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="avatar" style="width:28px;height:28px;font-size:11px;">${esc(lead.name[0])}</div>
+            <span style="font-weight:500;">${esc(lead.name)}</span>
+            ${lead.called?'<span style="font-size:9px;color:#4ade80;">✓</span>':""}
+          </div>
+        </td>
+        <td style="color:#8baabf;">${esc(lead.company)}</td>
+        <td style="font-family:monospace;font-size:12px;color:#c5d8ee;">${esc(lead.phone)}</td>
+        <td>${badgeHTML(lead.status)}</td>
+        <td style="color:#6b8aad;font-size:11px;max-width:160px;">
+          ${lastAct?`<span title="${esc(lastAct.ts)}">${ACTIVITY_ICONS[lastAct.type]||"•"} ${esc(lastAct.text.slice(0,28))}${lastAct.text.length>28?"…":""}</span>`:"—"}
+        </td>
+        <td style="display:flex;gap:4px;align-items:center;">
+          <button class="btn-small-call" onclick="event.stopPropagation();callLead(${lead.id})">📞</button>
+          <button class="btn-icon" onclick="event.stopPropagation();openEditModal(${lead.id})" style="font-size:10px;padding:3px 7px;">✏️</button>
+          <button class="btn-icon" onclick="event.stopPropagation();deleteLead(${lead.id})" style="font-size:10px;padding:3px 7px;color:#f87171;border-color:#3d1a1a;">🗑</button>
+        </td>
+      </tr>`;
+    }).join("");
+  }
+  if(selectedLeadId) renderLeadPanel();
+}
+
+function selectLead(id) {
+  selectedLeadId = id;
+  renderLeadsTable();
+  renderLeadPanel();
+}
+
+function showAddLeadForm(){
+  document.getElementById("add-lead-form").classList.remove("hidden");
+}
+function toggleAddLead(){
+  document.getElementById("add-lead-form").classList.toggle("hidden");
+}
+function addLeadSubmit(){
+  const name = document.getElementById("nl-name").value.trim();
+  const phone = document.getElementById("nl-phone").value.trim();
+  if(!name&&!phone) return;
+  const lead = {
+    id: Date.now(),
+    name: name||"Unknown",
+    company: document.getElementById("nl-company").value.trim(),
+    phone,
+    email: document.getElementById("nl-email").value.trim(),
+    status: document.getElementById("nl-status").value,
+    value: document.getElementById("nl-value").value.trim(),
+    notes: document.getElementById("nl-notes").value.trim(),
+    called: false,
+    activity: [{type:"created",text:"Lead created",ts:nowStr()}]
+  };
+  leads.push(lead);
+  ["nl-name","nl-company","nl-phone","nl-email","nl-value","nl-notes"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("nl-status").value="New";
+  document.getElementById("add-lead-form").classList.add("hidden");
+  save();
+  renderLeadsTable();
+}
+
+// ═══════════════════════════════════════════
+//  LEAD PANEL
+// ═══════════════════════════════════════════
+function renderLeadPanel(){
+  const panel = document.getElementById("lead-panel");
+  const lead = getLead(selectedLeadId);
+  if(!lead){ panel.classList.add("hidden"); panel.innerHTML=""; return; }
+  panel.classList.remove("hidden");
+
+  const actRev = [...(lead.activity||[])].reverse();
+  panel.innerHTML = `
+    <div class="panel-sticky">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="avatar" style="width:40px;height:40px;font-size:16px;">${esc(lead.name[0])}</div>
+          <div>
+            <div style="font-weight:600;font-size:14px;">${esc(lead.name)}</div>
+            <div style="font-size:11px;color:#6b8aad;">${esc(lead.company)}</div>
+          </div>
+        </div>
+        <button onclick="closePanel()" style="background:none;border:none;color:#6b8aad;font-size:18px;line-height:1;cursor:pointer;">×</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+        <button class="btn-primary" style="font-size:12px;padding:6px 12px;flex:1;" onclick="callLead(${lead.id})">📞 Call</button>
+        <button class="btn-secondary" style="font-size:12px;padding:6px 10px;" onclick="openEditModal(${lead.id})">✏️ Edit</button>
+        <button class="btn-secondary" style="font-size:12px;padding:6px 10px;" onclick="togglePanelReminder()">⏰ Remind</button>
+        <button class="btn-secondary" style="font-size:12px;padding:6px 10px;color:#f87171;border-color:#3d1a1a;" onclick="deleteLead(${lead.id})">🗑</button>
+      </div>
+    </div>
+    <div class="panel-body">
+      ${lead.phone?`<div style="font-size:12px;color:#8baabf;margin-bottom:5px;">📞 ${esc(lead.phone)}</div>`:""}
+      ${lead.email?`<div style="font-size:12px;color:#8baabf;margin-bottom:5px;">✉️ ${esc(lead.email)}</div>`:""}
+      ${lead.value?`<div style="font-size:12px;color:#8baabf;margin-bottom:5px;">💰 ${esc(lead.value)}</div>`:""}
+
+      <div style="margin-top:10px;">
+        <div class="panel-label">Status</div>
+        <select class="inp" style="font-size:12px;" onchange="panelUpdateStatus(${lead.id},this.value)">
+          ${pipelineStages.map(s=>`<option${s===lead.status?" selected":""}>${s}</option>`).join("")}
+        </select>
+      </div>
+      <div style="margin-top:10px;">
+        <div class="panel-label">Notes</div>
+        <textarea class="inp" style="height:56px;font-size:12px;" placeholder="Add notes..." oninput="panelUpdateNotes(${lead.id},this.value)">${esc(lead.notes)}</textarea>
+      </div>
+
+      <div id="panel-reminder-form" class="reminder-form hidden">
+        <div style="font-size:11px;color:#fbbf24;font-weight:600;margin-bottom:8px;">⏰ Set Reminder</div>
+        <input class="inp" id="pr-text" placeholder="Reminder note..." style="font-size:12px;margin-bottom:6px;" />
+        <div style="display:flex;gap:6px;margin-bottom:8px;">
+          <input type="date" class="inp" id="pr-date" style="font-size:12px;flex:1;" value="${todayStr()}" />
+          <input type="time" class="inp" id="pr-time" style="font-size:12px;width:80px;" value="09:00" />
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn-primary" style="font-size:11px;padding:6px 12px;" onclick="addPanelReminder(${lead.id},'${esc(lead.name)}')">Save</button>
+          <button class="btn-secondary" style="font-size:11px;padding:6px 10px;" onclick="togglePanelReminder()">Cancel</button>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <div class="panel-label">Log Activity</div>
+        <select class="inp" id="panel-act-type" style="font-size:12px;margin-bottom:6px;">
+          <option value="note">📝 Note</option>
+          <option value="call">📞 Call</option>
+          <option value="email">✉️ Email</option>
+          <option value="status">🔄 Status Update</option>
+        </select>
+        <div style="display:flex;gap:6px;">
+          <input class="inp" id="panel-act-text" placeholder="What happened?" style="font-size:12px;flex:1;"
+            onkeydown="if(event.key==='Enter')addPanelActivity(${lead.id})" />
+          <button class="btn-primary" style="padding:6px 12px;font-size:12px;" onclick="addPanelActivity(${lead.id})">+</button>
+        </div>
+      </div>
+
+      <div class="activity-feed">
+        <div class="panel-label">Activity (${actRev.length})</div>
+        ${actRev.map(a=>`
+          <div class="activity-entry">
+            <div class="activity-icon">${ACTIVITY_ICONS[a.type]||"•"}</div>
+            <div>
+              <div class="activity-text">${esc(a.text)}</div>
+              <div class="activity-ts">${esc(a.ts)}</div>
+            </div>
+          </div>`).join("")}
+        ${actRev.length===0?'<div style="font-size:12px;color:#4a6a8a;">No activity yet</div>':""}
+      </div>
+    </div>`;
+}
+
+function closePanel(){ selectedLeadId=null; document.getElementById("lead-panel").classList.add("hidden"); renderLeadsTable(); }
+function togglePanelReminder(){ document.getElementById("panel-reminder-form").classList.toggle("hidden"); }
+
+function panelUpdateStatus(id, status){
+  const entry={type:"status",text:`Status changed to ${status}`,ts:nowStr()};
+  const lead=getLead(id); if(!lead)return;
+  lead.status=status; lead.activity.push(entry);
+  save();
+  renderLeadsTable();
+}
+function panelUpdateNotes(id, notes){ const lead=getLead(id); if(lead){ lead.notes=notes; save(); } }
+function addPanelActivity(id){
+  const text=document.getElementById("panel-act-text").value.trim();
+  const type=document.getElementById("panel-act-type").value;
+  if(!text)return;
+  const lead=getLead(id); if(!lead)return;
+  lead.activity.push({type,text,ts:nowStr()});
+  document.getElementById("panel-act-text").value="";
+  save();
+  renderLeadPanel();
+  renderLeadsTable();
+}
+function addPanelReminder(leadId, leadName){
+  const text=(document.getElementById("pr-text")||{value:""}).value.trim();
+  const date=(document.getElementById("pr-date")||{value:todayStr()}).value;
+  const time=(document.getElementById("pr-time")||{value:"09:00"}).value;
+  if(!text||!date)return;
+  reminders.push({id:Date.now(),leadId,leadName,text,date,time,done:false});
+  const lead=getLead(leadId);
+  if(lead) lead.activity.push({type:"reminder",text:`Reminder set: "${text}" on ${date}`,ts:nowStr()});
+  togglePanelReminder();
+  save();
+  renderLeadPanel();
+  updateCalendarDot();
+}
+
+// ═══════════════════════════════════════════
+//  CALLING
+// ═══════════════════════════════════════════
+function openGoogleVoice(phone){ const d=phone.replace(/\D/g,""); window.open(`https://voice.google.com/calls?a=nc,+1${d}`,"_blank"); }
+function callLead(id){
+  const lead=getLead(id); if(!lead)return;
+  openGoogleVoice(lead.phone);
+  lead.called=true;
+  // Only auto-promote manually-added "New" leads — Dialer Queue leads stay put until disposition
+  if(lead.status==="New") lead.status="Contacted";
+  save();
+  if(activeTab==="Leads") renderLeadsTable();
+  if(activeTab==="Dialer") renderDialer();
+}
+
+// ═══════════════════════════════════════════
+//  DIALER
+// ═══════════════════════════════════════════
+function startDialer(){
+  const queue=leads.filter(l=>!l.called);
+  if(!queue.length)return;
+  dialQueue=[...queue]; dialIndex=0; dialerActive=true;
+  switchTab("Dialer");
+}
+
+function dialNext(){
+  if(dialIndex < dialQueue.length-1){ dialIndex++; renderDialer(); }
+  else { dialerActive=false; renderDialer(); }
+}
+
+function updateLeadStatus(id, status){
+  const entry={type:"status",text:`Status changed to ${status}`,ts:nowStr()};
+  const lead=getLead(id); if(!lead)return;
+  lead.status=status; lead.activity.push(entry);
+  save();
+  if(selectedLeadId===id) renderLeadPanel();
+}
+
+function renderDialer(){
+  const s=getStats();
+  const main=document.getElementById("dialer-main");
+  if(dialerActive && dialQueue[dialIndex]){
+    const cur=dialQueue[dialIndex];
+    main.innerHTML=`
+      <div class="dialer-card">
+        <div style="font-size:11px;color:#6b8aad;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.08em;">Now Calling</div>
+        <div class="dialer-avatar">${esc(cur.name[0])}</div>
+        <div style="font-size:20px;font-weight:700;">${esc(cur.name)}</div>
+        <div style="font-size:13px;color:#6b8aad;margin-bottom:4px;">${esc(cur.company)}</div>
+        <div style="font-size:17px;font-family:monospace;color:#5eb8ff;margin:10px 0 18px;">${esc(cur.phone)}</div>
+        <div style="display:flex;gap:8px;justify-content:center;">
+          <button class="btn-primary" style="font-size:14px;padding:11px 24px;" onclick="callLead(${cur.id})">📞 Open Google Voice</button>
+          <button class="btn-secondary" style="padding:11px 16px;" onclick="dialNext()">Skip →</button>
+        </div>
+        <div style="margin-top:12px;color:#6b8aad;font-size:12px;">${dialIndex+1} of ${dialQueue.length} leads</div>
+        <div style="margin-top:12px;">
+          <textarea class="inp" style="height:56px;font-size:12px;" placeholder="Quick note..."
+            oninput="dialerNoteUpdate(${cur.id},this.value)">${esc(cur.notes||"")}</textarea>
+        </div>
+        <div style="margin-top:14px;">
+          <div style="font-size:10px;color:#6b8aad;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Disposition — moves lead into pipeline</div>
+          <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
+            ${[
+              {label:"Contacted",    status:"Contacted",  color:"#4ade80"},
+              {label:"Qualified",    status:"Qualified",  color:"#fbbf24"},
+              {label:"Proposal",     status:"Proposal",   color:"#f472b6"},
+              {label:"Voicemail",    status:"Contacted",  color:"#5eb8ff"},
+              {label:"Callback",     status:"Contacted",  color:"#5eb8ff"},
+              {label:"Not Interested",status:"Lost",      color:"#f87171"},
+            ].map(d=>`<button onclick="dialerDisposition(${cur.id},'${d.label}','${d.status}')"
+              style="background:#1a2f47;border:1px solid #2a4a6a;color:${d.color};border-radius:6px;padding:6px 11px;font-size:11px;font-family:'DM Sans',sans-serif;font-weight:500;">${d.label}</button>`).join("")}
+          </div>
+        </div>
+        <div style="margin-top:10px;text-align:center;">
+          <button class="btn-secondary" style="font-size:11px;padding:5px 14px;" onclick="openEditModal(${cur.id})">✏️ Open Lead Card</button>
+        </div>
+      </div>`;
+  } else {
+    main.innerHTML=`
+      <div class="dialer-idle">
+        <div style="font-size:44px;margin-bottom:10px;">📞</div>
+        <div style="font-size:17px;font-weight:600;margin-bottom:8px;">Power Dialer</div>
+        <div style="font-size:13px;color:#6b8aad;margin-bottom:18px;">${s.uncalled>0?`${s.uncalled} leads ready`:"All leads called!"}</div>
+        <button class="btn-primary" style="padding:11px 24px;font-size:14px;opacity:${s.uncalled===0?0.5:1};"
+          onclick="startDialer()" ${s.uncalled===0?"disabled":""}>▶ Start Dialing</button>
+      </div>`;
+  }
+  // Uncalled list
+  const uncalled=leads.filter(l=>!l.called);
+  document.getElementById("uncalled-list").innerHTML = uncalled.length===0
+    ? '<div style="color:#6b8aad;font-size:12px;">No uncalled leads</div>'
+    : uncalled.map(l=>`
+        <div class="uncalled-row">
+          <div class="dot" style="background:${dialerActive&&dialQueue[dialIndex]?.id===l.id?"#c0392b":"#1a2f47"};"></div>
+          <div style="flex:1;">
+            <div style="font-size:13px;">${esc(l.name)}</div>
+            <div style="font-size:10px;color:#6b8aad;font-family:monospace;">${esc(l.phone)}</div>
+          </div>
+          <button class="btn-icon" onclick="callLead(${l.id});renderDialer();">Call</button>
+        </div>`).join("");
+}
+
+function dialerNoteUpdate(id, notes){
+  const lead=getLead(id); if(lead) lead.notes=notes;
+  const qi=dialQueue.findIndex(l=>l.id===id);
+  if(qi>=0) dialQueue[qi].notes=notes;
+}
+
+function dialerDisposition(id, disposition, mappedStatus){
+  const lead=getLead(id); if(!lead) return;
+  // Save any quick note
+  const noteEl=document.querySelector(`textarea[oninput*="dialerNoteUpdate(${id}"]`);
+  if(noteEl && noteEl.value.trim()) {
+    lead.notes=noteEl.value.trim();
+    lead.activity.push({type:"note",text:noteEl.value.trim(),ts:nowStr()});
+  }
+  lead.activity.push({type:"call",text:`Disposition: ${disposition}`,ts:nowStr()});
+  if(mappedStatus){
+    lead.status=mappedStatus;
+    lead.activity.push({type:"status",text:`→ ${mappedStatus} (via dialer)`,ts:nowStr()});
+  }
+  lead.called=true;
+  save();
+  dialNext();
+}
+
+// ═══════════════════════════════════════════
+//  PIPELINE
+// ═══════════════════════════════════════════
+let dragLeadId = null;
+
+function renderPipeline(){
+  const container=document.getElementById("pipeline-cols");
+  container.innerHTML = pipelineStages.map(stage=>{
+    const c=STATUS_COLORS[stage]||{bg:"#1a2f47",text:"#5eb8ff"};
+    const stageLeads=leads.filter(l=>l.status===stage && l.status!=="Dialer Queue");
+    return `
+      <div class="pipeline-col" data-stage="${esc(stage)}">
+        <div class="pipeline-header" style="background:${c.bg};" ondblclick="startEditStageTitle(this,'${esc(stage)}')">
+          <span class="pipeline-stage-title" style="color:${c.text};font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">${esc(stage)}</span>
+          <div style="display:flex;align-items:center;gap:5px;">
+            <span style="color:${c.text};border:1px solid ${c.text}44;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700;">${stageLeads.length}</span>
+            <button class="pipeline-col-header-edit" onclick="startEditStageTitle(this.closest('.pipeline-header'),'${esc(stage)}')" title="Rename">✏️</button>
+          </div>
+        </div>
+        <div class="pipeline-body"
+          ondragover="pipeDragOver(event,this)"
+          ondragleave="pipeDragLeave(this)"
+          ondrop="pipeDrop(event,'${esc(stage)}')">
+          ${stageLeads.map(lead=>{
+            const lastAct=lead.activity?.slice(-1)[0];
+            return `<div class="pipeline-card" draggable="true"
+              data-lead-id="${lead.id}"
+              ondragstart="pipeDragStart(event,${lead.id})"
+              ondragend="pipeDragEnd(event)">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <div>
+                  <div style="font-size:13px;font-weight:500;">${esc(lead.name)}</div>
+                  <div style="font-size:11px;color:#6b8aad;">${esc(lead.company)}</div>
+                </div>
+                <button onclick="openEditModal(${lead.id})" style="background:none;border:none;color:#4a6a8a;cursor:pointer;font-size:13px;padding:0;line-height:1;">✏️</button>
+              </div>
+              ${lead.value?`<div style="font-size:11px;color:#4ade80;margin-top:3px;">${esc(lead.value)}</div>`:""}
+              ${lastAct?`<div style="font-size:10px;color:#4a6a8a;margin-top:3px;">${ACTIVITY_ICONS[lastAct.type]||"•"} ${esc(lastAct.text.slice(0,30))}${lastAct.text.length>30?"…":""}</div>`:""}
+              <div class="pipeline-card-actions">
+                <button class="btn-icon" onclick="callLead(${lead.id})">📞</button>
+                <button class="btn-icon" onclick="openEditModal(${lead.id})">Open</button>
+                <button class="btn-icon" onclick="deleteLead(${lead.id})" style="color:#f87171;border-color:#3d1a1a;">🗑</button>
+              </div>
+            </div>`;
+          }).join("")}
+          ${stageLeads.length===0?`<div class="pipeline-empty-drop" style="padding:14px;color:#3a5570;font-size:11px;text-align:center;">Drop here</div>`:""}
+        </div>
+        <button class="pipeline-col-add-btn" onclick="addLeadToStage('${esc(stage)}')">+ Add card</button>
+      </div>`;
+  }).join("") +
+  `<div class="pipeline-add-col">
+    <button class="pipeline-add-col-btn" onclick="addPipelineColumn()">+ Add Column</button>
+  </div>`;
+}
+
+function pipeDragStart(e, leadId){
+  dragLeadId = leadId;
+  e.dataTransfer.effectAllowed = "move";
+  setTimeout(()=>{ const el=document.querySelector(`[data-lead-id="${leadId}"]`); if(el) el.classList.add("dragging"); },0);
+}
+function pipeDragEnd(e){
+  document.querySelectorAll('.pipeline-card').forEach(c=>c.classList.remove("dragging"));
+  document.querySelectorAll('.pipeline-body').forEach(b=>b.classList.remove("drag-over"));
+}
+function pipeDragOver(e, el){
+  e.preventDefault(); e.dataTransfer.dropEffect="move";
+  document.querySelectorAll('.pipeline-body').forEach(b=>b.classList.remove("drag-over"));
+  el.classList.add("drag-over");
+}
+function pipeDragLeave(el){ el.classList.remove("drag-over"); }
+function pipeDrop(e, stage){
+  e.preventDefault();
+  document.querySelectorAll('.pipeline-body').forEach(b=>b.classList.remove("drag-over"));
+  if(dragLeadId===null) return;
+  const lead=getLead(dragLeadId);
+  if(lead && lead.status!==stage){
+    lead.status=stage;
+    lead.activity.push({type:"status",text:`Moved to ${stage}`,ts:nowStr()});
+  }
+  dragLeadId=null;
+  save();
+  renderPipeline();
+  if(activeTab==="Leads") renderLeadsTable();
+}
+
+function startEditStageTitle(headerEl, oldStage){
+  const titleSpan=headerEl.querySelector('.pipeline-stage-title');
+  if(!titleSpan||titleSpan.querySelector('input')) return;
+  const input=document.createElement('input');
+  input.className='pipeline-header-title-input';
+  input.value=oldStage;
+  input.style.color=titleSpan.style.color||'#5eb8ff';
+  titleSpan.innerHTML='';
+  titleSpan.appendChild(input);
+  input.focus(); input.select();
+  function commit(){
+    const newName=input.value.trim()||oldStage;
+    const idx=pipelineStages.indexOf(oldStage);
+    if(idx>=0) pipelineStages[idx]=newName;
+    // rename in all leads
+    leads.forEach(l=>{ if(l.status===oldStage) l.status=newName; });
+    // rename in STATUS_COLORS
+    if(oldStage!==newName && STATUS_COLORS[oldStage]){
+      STATUS_COLORS[newName]=STATUS_COLORS[oldStage];
+    }
+    save();
+    renderPipeline();
+  }
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter') input.blur(); if(e.key==='Escape'){ input.value=oldStage; input.blur(); } });
+}
+
+function addPipelineColumn(){
+  const name=prompt("Column name:");
+  if(!name||!name.trim()) return;
+  const n=name.trim();
+  if(pipelineStages.includes(n)) return;
+  pipelineStages.push(n);
+  STATUS_COLORS[n]={bg:"#1a2f47",text:"#5eb8ff"};
+  save();
+  renderPipeline();
+}
+
+function addLeadToStage(stage){
+  // Pre-fill add lead form and switch to leads tab
+  switchTab('Leads');
+  showAddLeadForm();
+  document.getElementById('nl-status').value=stage;
+}
+
+// ═══════════════════════════════════════════
+//  CALENDAR
+// ═══════════════════════════════════════════
+function renderCalendar(){
+  const today=todayStr();
+  const todayRems=reminders.filter(r=>r.date===today&&!r.done);
+  const banner=document.getElementById("today-banner");
+  if(todayRems.length>0){
+    banner.classList.remove("hidden");
+    banner.innerHTML=`<div style="font-size:12px;font-weight:600;color:#5eb8ff;margin-bottom:6px;">⏰ Today's Reminders (${todayRems.length})</div>`+
+      todayRems.map(r=>`<div style="font-size:13px;color:#c5d8ee;margin-bottom:3px;"><span style="color:#5eb8ff;">${esc(r.time)}</span> — ${esc(r.text)}${r.leadName?` (${esc(r.leadName)})`:""}</div>`).join("");
+  } else banner.classList.add("hidden");
+
+  // Mini calendar
+  const {y,m}=calViewMonth;
+  const monthNames=["January","February","March","April","May","June","July","August","September","October","November","December"];
+  document.getElementById("cal-month-label").textContent=`${monthNames[m]} ${y}`;
+  const firstDay=new Date(y,m,1).getDay();
+  const daysInMonth=new Date(y,m+1,0).getDate();
+  const grid=document.getElementById("cal-grid");
+  let html=["S","M","T","W","T","F","S"].map(d=>`<div class="cal-day-hdr">${d}</div>`).join("");
+  for(let i=0;i<firstDay;i++) html+=`<div class="cal-cell"></div>`;
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`${y}-${pad(m+1)}-${pad(d)}`;
+    const isToday=dateStr===today;
+    const dayRems=reminders.filter(r=>r.date===dateStr);
+    html+=`<div class="cal-cell${isToday?" today":""}">
+      <span>${d}</span>
+      ${dayRems.length>0?`<div class="cal-dot"></div>`:""}
+    </div>`;
+  }
+  grid.innerHTML=html;
+
+  // Populate lead dropdown in new reminder form
+  const nr=document.getElementById("nr-lead");
+  if(nr){
+    nr.innerHTML=`<option value="">— No lead —</option>`+leads.map(l=>`<option value="${l.id}">${esc(l.name)} (${esc(l.company)})</option>`).join("");
+  }
+  const nrd=document.getElementById("nr-date"); if(nrd&&!nrd.value) nrd.value=today;
+
+  renderReminderList();
+  updateCalendarDot();
+}
+
+function changeMonth(dir){
+  let {y,m}=calViewMonth;
+  m+=dir;
+  if(m<0){m=11;y--;} else if(m>11){m=0;y++;}
+  calViewMonth={y,m};
+  renderCalendar();
+}
+
+function setReminderFilter(f){
+  reminderFilter=f;
+  document.querySelectorAll('.filter-tab').forEach(btn=>btn.classList.toggle('active',btn.dataset.filter===f));
+  renderReminderList();
+}
+document.querySelectorAll('.filter-tab').forEach(btn=>btn.addEventListener('click',()=>setReminderFilter(btn.dataset.filter)));
+
+function renderReminderList(){
+  const today=todayStr();
+  let sorted=[...reminders].filter(r=>{
+    if(reminderFilter==="upcoming") return !r.done&&r.date>=today;
+    if(reminderFilter==="done") return r.done;
+    return true;
+  }).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  const el=document.getElementById("reminder-list-items");
+  if(sorted.length===0){ el.innerHTML=`<div style="color:#6b8aad;font-size:13px;padding:16px;text-align:center;">No reminders</div>`; return; }
+  el.innerHTML=sorted.map(r=>`
+    <div class="reminder-card${r.done?" done-card":""}">
+      <input type="checkbox" ${r.done?"checked":""} style="margin-top:2px;accent-color:#c0392b;cursor:pointer;" onchange="toggleReminder(${r.id})" />
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:500;text-decoration:${r.done?"line-through":"none"};color:${r.done?"#6b8aad":"#e2eaf5"};">${esc(r.text)}</div>
+        ${r.leadName?`<div style="font-size:11px;color:#5eb8ff;margin-top:2px;">👤 ${esc(r.leadName)}</div>`:""}
+        <div style="font-size:11px;color:${r.date<today&&!r.done?"#f87171":"#6b8aad"};margin-top:3px;">
+          ${r.date<today&&!r.done?"⚠️ Overdue — ":"📅 "}${esc(r.date)}${r.time?` at ${esc(r.time)}`:""}
+        </div>
+      </div>
+      <button onclick="deleteReminder(${r.id})" style="background:none;border:none;color:#4a6a8a;cursor:pointer;font-size:14px;padding:0;">🗑</button>
+    </div>`).join("");
+}
+
+function toggleNewReminderForm(){ document.getElementById("new-reminder-form").classList.toggle("hidden"); }
+function addReminder(){
+  const text=document.getElementById("nr-text").value.trim();
+  const date=document.getElementById("nr-date").value;
+  const time=document.getElementById("nr-time").value;
+  const leadId=Number(document.getElementById("nr-lead").value)||null;
+  if(!text||!date)return;
+  const lead=leads.find(l=>l.id===leadId);
+  reminders.push({id:Date.now(),leadId,leadName:lead?.name||"",text,date,time,done:false});
+  document.getElementById("nr-text").value="";
+  document.getElementById("new-reminder-form").classList.add("hidden");
+  save();
+  renderCalendar();
+}
+function toggleReminder(id){ const r=reminders.find(r=>r.id===id); if(r) r.done=!r.done; save(); renderReminderList(); updateCalendarDot(); }
+function deleteReminder(id){ reminders=reminders.filter(r=>r.id!==id); save(); renderCalendar(); }
+function updateCalendarDot(){
+  const calBtn=document.getElementById("cal-tab-btn");
+  const cnt=todayRemCount();
+  const existing=calBtn.querySelector('.tab-dot');
+  if(cnt>0&&!existing){ const dot=document.createElement('span'); dot.className='tab-dot'; calBtn.appendChild(dot); }
+  else if(cnt===0&&existing) existing.remove();
+}
+
+// ═══════════════════════════════════════════
+//  CALCULATOR
+// ═══════════════════════════════════════════
+let calcCopied=false;
+function calcUpdate(){
+  const service=document.getElementById("calc-service").value;
+  const distance=Number(document.getElementById("calc-distance").value);
+  const weight=Number(document.getElementById("calc-weight").value);
+  const stops=Number(document.getElementById("calc-stops").value);
+  const packages=Number(document.getElementById("calc-packages").value);
+  const hazmat=document.getElementById("calc-hazmat").checked;
+  const residential=document.getElementById("calc-residential").checked;
+
+  document.getElementById("lbl-distance").textContent=`${distance} miles`;
+  document.getElementById("lbl-weight").textContent=`${weight} lbs`;
+  document.getElementById("lbl-stops").textContent=`${stops} stops`;
+  document.getElementById("lbl-packages").textContent=`${packages} pkgs`;
+
+  const r=RATES[service];
+  const baseCharge=r.base;
+  const distCharge=+(distance*r.perMile).toFixed(2);
+  const weightCharge=+(Math.max(0,weight-10)*r.perLb).toFixed(2);
+  const stopCharge=+((stops-1)*20).toFixed(2);
+  const pkgCharge=+((packages-1)*2.5).toFixed(2);
+  const hazmatFee=hazmat?15:0;
+  const resFee=residential?5:0;
+  const subtotal=baseCharge+distCharge+weightCharge+stopCharge+pkgCharge+hazmatFee+resFee;
+  const fuel=+(subtotal*0.12).toFixed(2);
+  const total=+(subtotal+fuel).toFixed(2);
+
+  document.getElementById("service-badge").textContent=r.label;
+  document.getElementById("calc-total").textContent=`$${total.toFixed(2)}`;
+
+  const lineItems=[
+    {label:"Base rate",val:baseCharge},
+    {label:`Distance (${distance} mi × $${r.perMile}/mi)`,val:distCharge},
+    {label:`Weight surcharge (${Math.max(0,weight-10)} lbs over 10 × $${r.perLb}/lb)`,val:weightCharge},
+    ...(stops>1?[{label:`Extra stops (${stops-1} × $20)`,val:stopCharge}]:[]),
+    ...(packages>1?[{label:`Extra packages (${packages-1} × $2.50)`,val:pkgCharge}]:[]),
+    ...(hazmat?[{label:"Hazmat surcharge",val:hazmatFee}]:[]),
+    ...(residential?[{label:"Residential delivery",val:resFee}]:[]),
+    {label:"Fuel surcharge (12%)",val:fuel},
+  ];
+  document.getElementById("rate-lines").innerHTML=lineItems.map(({label,val})=>`
+    <div class="rate-breakdown-line">
+      <span style="color:#8baabf;">${esc(label)}</span>
+      <span style="color:#c5d8ee;font-weight:500;">$${val.toFixed(2)}</span>
+    </div>`).join("");
+
+  const quoteText=`TDG Courier — Rate Quote
+Service: ${r.label}
+Distance: ${distance} miles
+Weight: ${weight} lbs
+Packages: ${packages} | Stops: ${stops}
+${hazmat?"Hazmat surcharge included\n":""}${residential?"Residential delivery included\n":""}
+Base: $${baseCharge.toFixed(2)}
+Distance: $${distCharge.toFixed(2)}
+Weight surcharge: $${weightCharge.toFixed(2)} (${Math.max(0,weight-10)} lbs over 10 × $${r.perLb})
+${stops>1?`Extra stops: $${stopCharge.toFixed(2)}\n`:""}${packages>1?`Extra packages: $${pkgCharge.toFixed(2)}\n`:""}${hazmat?`Hazmat: $${hazmatFee.toFixed(2)}\n`:""}${residential?`Residential: $${resFee.toFixed(2)}\n`:""}Fuel surcharge (12%): $${fuel.toFixed(2)}
+──────────────────
+TOTAL: $${total.toFixed(2)}`;
+  document.getElementById("quote-text").textContent=quoteText;
+
+  // Rate cards
+  document.getElementById("rate-cards").innerHTML=Object.entries(RATES).map(([k,v])=>`
+    <div class="rate-card-item${k===service?" selected":""}" onclick="document.getElementById('calc-service').value='${k}';calcUpdate();">
+      <div class="rc-name">${esc(v.label)}</div>
+      <div class="rc-detail">Base: $${v.base} | $${v.perMile}/mi | $${v.perLb}/lb over 10lbs</div>
+    </div>`).join("");
+}
+
+function copyQuote(){
+  const text=document.getElementById("quote-text").textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=document.getElementById("copy-quote-btn");
+    btn.textContent="✓ Copied to clipboard!";
+    btn.style.background="#1a3d2b"; btn.style.borderColor="#4ade80"; btn.style.color="#4ade80";
+    setTimeout(()=>{ btn.textContent="📋 Copy Quote"; btn.style.background="#1a2f47"; btn.style.borderColor="#2a4a6a"; btn.style.color="#5eb8ff"; },2000);
+  });
+}
+
+// ═══════════════════════════════════════════
+//  CSV UPLOAD
+// ═══════════════════════════════════════════
+function parseCSV(text) {
+  // Robust CSV parser that handles quoted fields with embedded newlines/commas
+  const rows = [];
+  let cur = [], field = "", inQuote = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i], next = text[i+1];
+    if (inQuote) {
+      if (ch === '"' && next === '"') { field += '"'; i++; }
+      else if (ch === '"') { inQuote = false; }
+      else { field += ch; }
+    } else {
+      if (ch === '"') { inQuote = true; }
+      else if (ch === ',') { cur.push(field.trim()); field = ""; }
+      else if (ch === '\n' || (ch === '\r' && next === '\n')) {
+        if (ch === '\r') i++;
+        cur.push(field.trim()); rows.push(cur); cur = []; field = "";
+      } else { field += ch; }
+    }
+  }
+  if (field || cur.length) { cur.push(field.trim()); rows.push(cur); }
+  return rows;
+}
+
+function cleanPhone(p) {
+  // Strip invisible unicode chars, letters (except ext), extra punctuation
+  return p.replace(/[\u200e\u200f\u202a-\u202e\uFEFF]/g,'').trim();
+}
+
+document.getElementById("csv-input").addEventListener("change",function(e){
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const rows = parseCSV(ev.target.result);
+    if(rows.length < 2){ document.getElementById("upload-msg").textContent="No valid leads found"; setTimeout(()=>{document.getElementById("upload-msg").textContent="";},3000); return; }
+
+    // Normalize headers — strip spaces, lowercase
+    const header = rows[0].map(h => h.toLowerCase().replace(/\s+/g,"").replace(/[^a-z0-9]/g,""));
+
+    // Flexible column finder
+    const col = (keys) => { for(const k of keys){ const i=header.findIndex(h=>h.includes(k)); if(i>=0) return i; } return -1; };
+    const iName    = col(["companyname","company","name","business"]);
+    const iPhone   = col(["phonenumber","phone"]);
+    const iEmail   = col(["email"]);
+    const iCity    = col(["city","location","state"]);
+    const iNotes   = col(["week1","remarks","notes","comments"]);
+    const iNotes2  = col(["week2"]);
+
+    const parsed=[];
+    for(let i=1;i<rows.length;i++){
+      const r=rows[i];
+      const company = iName>=0 ? r[iName]||"" : "";
+      const phone   = iPhone>=0 ? cleanPhone(r[iPhone]||"") : "";
+      const email   = iEmail>=0 ? r[iEmail]||"" : "";
+      const city    = iCity>=0  ? r[iCity]||""  : "";
+      const n1      = iNotes>=0  ? r[iNotes]||""  : "";
+      const n2      = iNotes2>=0 ? r[iNotes2]||"" : "";
+      const notes   = [n1,n2].filter(Boolean).join(" | ");
+
+      if(!company && !phone) continue; // skip blank rows
+
+      parsed.push({
+        id: Date.now()+i,
+        name: company || "Unknown",
+        company: company,
+        phone: phone,
+        email: email,
+        status: "Dialer Queue",
+        value: city ? city : "",
+        notes: notes,
+        called: false,
+        activity:[{type:"created",text:"Imported via CSV",ts:nowStr()}]
+      });
+    }
+
+    const msg=document.getElementById("upload-msg");
+    if(parsed.length>0){
+      leads=[...leads,...parsed];
+      save();
+      msg.textContent=`✓ Imported ${parsed.length} leads`;
+    } else msg.textContent="No valid leads found";
+    setTimeout(()=>{msg.textContent="";},3000);
+    if(activeTab==="Leads") renderLeadsTable();
+    else if(activeTab==="Dashboard") renderDashboard();
+  };
+  reader.readAsText(file); e.target.value="";
+});
+
+// ═══════════════════════════════════════════
+//  DELETE LEAD
+// ═══════════════════════════════════════════
+function deleteLead(id){
+  if(!confirm("Delete this lead? This cannot be undone.")) return;
+  leads=leads.filter(l=>l.id!==id);
+  reminders=reminders.filter(r=>r.leadId!==id);
+  if(selectedLeadId===id){ selectedLeadId=null; document.getElementById("lead-panel").classList.add("hidden"); }
+  save();
+  if(activeTab==="Leads") renderLeadsTable();
+  else if(activeTab==="Pipeline") renderPipeline();
+  else if(activeTab==="Dashboard") renderDashboard();
+}
+
+// ═══════════════════════════════════════════
+//  EDIT LEAD MODAL
+// ═══════════════════════════════════════════
+function openEditModal(id){
+  const lead=getLead(id); if(!lead) return;
+  // Remove any existing modal
+  const ex=document.getElementById("lead-edit-modal"); if(ex) ex.remove();
+
+  const stageOpts=pipelineStages.map(s=>`<option${s===lead.status?" selected":""}>${esc(s)}</option>`).join("");
+  const modal=document.createElement("div");
+  modal.id="lead-edit-modal";
+  modal.className="modal-overlay";
+  modal.innerHTML=`
+    <div class="modal-box">
+      <div class="modal-title">
+        <span>Edit Lead</span>
+        <button class="modal-close" onclick="closeEditModal()">×</button>
+      </div>
+      <div class="modal-grid">
+        <div class="modal-field"><label>Name *</label><input class="inp" id="em-name" value="${esc(lead.name)}" /></div>
+        <div class="modal-field"><label>Company</label><input class="inp" id="em-company" value="${esc(lead.company)}" /></div>
+        <div class="modal-field"><label>Phone</label><input class="inp" id="em-phone" value="${esc(lead.phone)}" /></div>
+        <div class="modal-field"><label>Email</label><input class="inp" id="em-email" value="${esc(lead.email)}" /></div>
+        <div class="modal-field"><label>Est. Value</label><input class="inp" id="em-value" value="${esc(lead.value)}" /></div>
+        <div class="modal-field"><label>Status / Stage</label><select class="inp" id="em-status">${stageOpts}</select></div>
+      </div>
+      <div class="modal-field" style="margin-bottom:14px;"><label>Notes</label><textarea class="inp" id="em-notes" style="height:70px;">${esc(lead.notes)}</textarea></div>
+      <div style="border-top:1px solid #1e3048;margin-bottom:14px;padding-top:14px;">
+        <div class="panel-label" style="margin-bottom:8px;">Activity Feed</div>
+        <div style="max-height:160px;overflow-y:auto;">
+          ${[...lead.activity].reverse().map(a=>`
+            <div class="activity-entry">
+              <div class="activity-icon">${ACTIVITY_ICONS[a.type]||"•"}</div>
+              <div><div class="activity-text">${esc(a.text)}</div><div class="activity-ts">${esc(a.ts)}</div></div>
+            </div>`).join("")}
+        </div>
+      </div>
+      <div class="flex-row" style="justify-content:flex-end;gap:8px;">
+        <button class="btn-secondary" onclick="closeEditModal()">Cancel</button>
+        <button class="btn-primary" onclick="saveEditModal(${lead.id})">Save Changes</button>
+      </div>
+    </div>`;
+  modal.addEventListener("click", e=>{ if(e.target===modal) closeEditModal(); });
+  document.body.appendChild(modal);
+}
+
+function closeEditModal(){ const m=document.getElementById("lead-edit-modal"); if(m) m.remove(); }
+
+function saveEditModal(id){
+  const lead=getLead(id); if(!lead) return;
+  const oldStatus=lead.status;
+  lead.name=document.getElementById("em-name").value.trim()||lead.name;
+  lead.company=document.getElementById("em-company").value.trim();
+  lead.phone=document.getElementById("em-phone").value.trim();
+  lead.email=document.getElementById("em-email").value.trim();
+  lead.value=document.getElementById("em-value").value.trim();
+  const newStatus=document.getElementById("em-status").value;
+  lead.notes=document.getElementById("em-notes").value.trim();
+  if(newStatus!==oldStatus){
+    lead.status=newStatus;
+    lead.activity.push({type:"status",text:`Status changed to ${newStatus}`,ts:nowStr()});
+  }
+  closeEditModal();
+  save();
+  if(activeTab==="Leads"){ renderLeadsTable(); if(selectedLeadId===id) renderLeadPanel(); }
+  else if(activeTab==="Pipeline") renderPipeline();
+}
+
+// ═══════════════════════════════════════════
+//  BACKUP EXPORT
+// ═══════════════════════════════════════════
+function exportBackup(){
+  const data={ leads, reminders, pipelineStages, exportedAt: nowStr() };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=`tdg-crm-backup-${todayStr()}.json`;
+  a.click();
+}
+
+// ═══════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════
+let currentUser = null;
+let currentRole = null; // 'admin' | 'client'
+let loginTab = 'admin';
+
+function setLoginTab(tab) {
+  loginTab = tab;
+  document.querySelectorAll('.login-tab').forEach((b,i)=>b.classList.toggle('active', (i===0&&tab==='admin')||(i===1&&tab==='client')));
+  document.getElementById('login-admin-fields').style.display = tab==='admin' ? '' : 'none';
+  document.getElementById('login-client-fields').style.display = tab==='client' ? '' : 'none';
+  document.getElementById('login-err').textContent = '';
+}
+
+function setLoginErr(msg) { document.getElementById('login-err').textContent = msg; }
+
+async function doLogin() {
+  const email = document.getElementById('la-email').value.trim();
+  const pass  = document.getElementById('la-pass').value;
+  if (!email || !pass) return setLoginErr('Please enter email and password.');
+  try {
+    await firebase.auth().signInWithEmailAndPassword(email, pass);
+  } catch(e) {
+    if (e.code === 'auth/user-not-found') setLoginErr('No account found. Click "Create admin account".');
+    else if (e.code === 'auth/wrong-password') setLoginErr('Incorrect password.');
+    else setLoginErr(e.message);
+  }
+}
+
+async function doSignup() {
+  const email = document.getElementById('la-email').value.trim();
+  const pass  = document.getElementById('la-pass').value;
+  if (!email || !pass) return setLoginErr('Enter an email and password to create account.');
+  if (pass.length < 6) return setLoginErr('Password must be at least 6 characters.');
+  try {
+    const cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+    await db.collection('users').doc(cred.user.uid).set({ role:'admin', email });
+  } catch(e) { setLoginErr(e.message); }
+}
+
+async function doClientLogin() {
+  const email = document.getElementById('lc-email').value.trim();
+  const pass  = document.getElementById('lc-pass').value;
+  if (!email || !pass) return setLoginErr('Please enter email and password.');
+  try {
+    await firebase.auth().signInWithEmailAndPassword(email, pass);
+  } catch(e) {
+    if (e.code === 'auth/user-not-found') setLoginErr('No client account. Click "Create account".');
+    else if (e.code === 'auth/wrong-password') setLoginErr('Incorrect password.');
+    else setLoginErr(e.message);
+  }
+}
+
+async function doClientSignup() {
+  const email = document.getElementById('lc-email').value.trim();
+  const pass  = document.getElementById('lc-pass').value;
+  if (!email || !pass) return setLoginErr('Enter email and password.');
+  if (pass.length < 6) return setLoginErr('Password must be at least 6 characters.');
+  try {
+    const cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+    await db.collection('users').doc(cred.user.uid).set({ role:'client', email });
+  } catch(e) { setLoginErr(e.message); }
+}
+
+async function doLogout() {
+  await firebase.auth().signOut();
+}
+
+// Auth state observer — drives everything
+function initAuth() {
+  firebase.auth().onAuthStateChanged(async (user) => {
+    if (!user) {
+      // Show login
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('app').style.display = 'none'; // hide CRM
+      document.getElementById('client-portal').style.display = 'none';
+      currentUser = null; currentRole = null;
+      return;
+    }
+    currentUser = user;
+    // Look up role
+    try {
+      const snap = await db.collection('users').doc(user.uid).get();
+      currentRole = snap.exists ? snap.data().role : 'admin';
+    } catch(e) { currentRole = 'admin'; }
+
+    document.getElementById('login-screen').style.display = 'none';
+
+    if (currentRole === 'client') {
+      document.getElementById('app').style.display = 'none';
+      showClientPortal(user);
+    } else {
+      document.getElementById('app').style.display = 'flex';
+      document.getElementById('client-portal').style.display = 'none';
+      const hu = document.getElementById('header-user');
+      if (hu) hu.textContent = user.email;
+      renderDashboard();
+    }
+  });
+}
+
+// ═══════════════════════════════════════════
+//  ORDERS
+// ═══════════════════════════════════════════
+let orders = [];
+let orderFilter = 'all';
+const ORDER_STATUSES = ['pending','picked-up','in-transit','delivered'];
+const ORDER_STATUS_LABELS = { 'pending':'Pending', 'picked-up':'Picked Up', 'in-transit':'In Transit', 'delivered':'Delivered', 'cancelled':'Cancelled' };
+const ORDER_ICONS = { 'pending':'📋', 'picked-up':'📦', 'in-transit':'🚚', 'delivered':'✅', 'cancelled':'❌' };
+
+function setOrderFilter(f) {
+  orderFilter = f;
+  ['all','pending','picked-up','in-transit','delivered'].forEach(s => {
+    const el = document.getElementById('of-'+s);
+    if(el) el.style.background = s===f ? '#1a2f47' : '';
+  });
+  renderOrders();
+}
+
+function renderOrders() {
+  const grid = document.getElementById('orders-grid');
+  if (!grid) return;
+  const filtered = orderFilter==='all' ? orders : orders.filter(o=>o.status===orderFilter);
+  if (!filtered.length) {
+    grid.innerHTML = `<div style="color:#4a6a8a;font-size:13px;padding:20px;grid-column:1/-1;">No orders found.</div>`;
+    return;
+  }
+  grid.innerHTML = filtered.map(order => {
+    const stepIdx = ORDER_STATUSES.indexOf(order.status);
+    const steps = ORDER_STATUSES.map((s,i) => `<div class="order-step ${i<stepIdx?'done':i===stepIdx?'active':''}"></div>`).join('');
+    const pill = `<span class="status-pill ${order.status}">${ORDER_ICONS[order.status]||''} ${ORDER_STATUS_LABELS[order.status]||order.status}</span>`;
+    const tl = (order.timeline||[]).map(t=>`
+      <div class="order-timeline-item">
+        <div class="order-tl-dot done"></div>
+        <div><span style="color:#c5d8ee;">${esc(t.status)}</span> <span style="color:#4a6a8a;margin-left:6px;">${esc(t.ts)}</span>${t.note?`<div style="color:#8baabf;margin-top:2px;">${esc(t.note)}</div>`:''}</div>
+      </div>`).join('');
+    const proof = order.deliveryPhoto ? `
+      <div class="delivery-proof">
+        <div style="font-size:11px;color:#6b8aad;margin-bottom:4px;">📸 Proof of Delivery</div>
+        <img src="${order.deliveryPhoto}" class="delivery-img" onclick="viewFullPhoto('${order.id}')" />
+        ${order.deliveryNote?`<div style="font-size:12px;color:#8baabf;margin-top:6px;">💬 ${esc(order.deliveryNote)}</div>`:''}
+      </div>` : '';
+    return `
+      <div class="order-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+          <div>
+            <div style="font-weight:600;font-size:14px;">${esc(order.title)}</div>
+            <div style="font-size:11px;color:#6b8aad;margin-top:2px;">
+              ${esc(order.clientEmail||'')} ${order.trackingId?`· #${esc(order.trackingId)}`:''}
+            </div>
+          </div>
+          ${pill}
+        </div>
+        <div style="font-size:12px;color:#8baabf;margin-top:8px;">
+          📍 <strong>From:</strong> ${esc(order.pickup||'—')} &nbsp;→&nbsp; <strong>To:</strong> ${esc(order.dropoff||'—')}
+        </div>
+        <div class="order-status-bar">${steps}</div>
+        ${proof}
+        ${tl ? `<div class="order-timeline">${tl}</div>` : ''}
+        <div style="display:flex;gap:6px;margin-top:14px;flex-wrap:wrap;">
+          ${order.status!=='delivered'&&order.status!=='cancelled' ? `
+            <button class="btn-secondary" style="font-size:11px;padding:5px 10px;" onclick="advanceOrder('${order.id}')">
+              → ${ORDER_STATUS_LABELS[ORDER_STATUSES[Math.min(ORDER_STATUSES.indexOf(order.status)+1,ORDER_STATUSES.length-1)]]||'Next'}
+            </button>
+            <button class="btn-secondary" style="font-size:11px;padding:5px 10px;" onclick="openDeliveryModal('${order.id}')">📸 Mark Delivered</button>
+          ` : ''}
+          <button class="btn-secondary" style="font-size:11px;padding:5px 10px;" onclick="openOrderNoteModal('${order.id}')">💬 Add Note</button>
+          <button class="btn-secondary" style="font-size:11px;padding:5px 10px;color:#f87171;border-color:#3d1a1a;" onclick="deleteOrder('${order.id}')">🗑</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function openNewOrderModal() {
+  const ex = document.getElementById('new-order-modal'); if(ex) ex.remove();
+  const clientEmails = [...new Set(orders.map(o=>o.clientEmail).filter(Boolean))];
+  const modal = document.createElement('div');
+  modal.id = 'new-order-modal';
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-box" style="width:560px;">
+      <div class="modal-title"><span>New Order</span><button class="modal-close" onclick="document.getElementById('new-order-modal').remove()">×</button></div>
+      <div class="modal-grid">
+        <div class="modal-field" style="grid-column:1/-1;"><label>Order Title / Description *</label><input class="inp" id="no-title" placeholder="e.g. Medical supplies delivery" /></div>
+        <div class="modal-field"><label>Client Email *</label><input class="inp" id="no-email" type="email" placeholder="client@company.com" list="no-email-list" /><datalist id="no-email-list">${clientEmails.map(e=>`<option value="${esc(e)}">`).join('')}</datalist></div>
+        <div class="modal-field"><label>Tracking ID</label><input class="inp" id="no-tracking" placeholder="Auto-generated if blank" /></div>
+        <div class="modal-field"><label>Pickup Address</label><input class="inp" id="no-pickup" placeholder="123 Main St, Philadelphia PA" /></div>
+        <div class="modal-field"><label>Dropoff Address</label><input class="inp" id="no-dropoff" placeholder="456 Oak Ave, Cherry Hill NJ" /></div>
+        <div class="modal-field"><label>Service Type</label>
+          <select class="inp" id="no-service">
+            <option>Standard</option><option>Express</option><option>Medical/Priority</option><option>Overnight</option><option>Scheduled Route</option>
+          </select>
+        </div>
+        <div class="modal-field"><label>Estimated Delivery</label><input class="inp" id="no-eta" type="date" /></div>
+      </div>
+      <div class="modal-field" style="margin-bottom:14px;"><label>Notes (visible to client)</label><textarea class="inp" id="no-notes" style="height:60px;" placeholder="Any special instructions..."></textarea></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn-secondary" onclick="document.getElementById('new-order-modal').remove()">Cancel</button>
+        <button class="btn-primary" onclick="submitNewOrder()">Create Order</button>
+      </div>
+    </div>`;
+  modal.addEventListener('click', e=>{ if(e.target===modal) modal.remove(); });
+  document.body.appendChild(modal);
+}
+
+function submitNewOrder() {
+  const title    = document.getElementById('no-title').value.trim();
+  const email    = document.getElementById('no-email').value.trim();
+  const tracking = document.getElementById('no-tracking').value.trim() || 'TDG-' + Date.now().toString(36).toUpperCase();
+  const pickup   = document.getElementById('no-pickup').value.trim();
+  const dropoff  = document.getElementById('no-dropoff').value.trim();
+  const service  = document.getElementById('no-service').value;
+  const eta      = document.getElementById('no-eta').value;
+  const notes    = document.getElementById('no-notes').value.trim();
+  if (!title || !email) return alert('Title and client email are required.');
+  const order = {
+    id: 'ord-' + Date.now(),
+    title, clientEmail: email, trackingId: tracking,
+    pickup, dropoff, service, eta, status: 'pending',
+    notes, deliveryPhoto: null, deliveryNote: null,
+    createdAt: nowStr(),
+    timeline: [{ status:'Order Created', ts: nowStr(), note: notes||'' }]
+  };
+  orders.unshift(order);
+  saveOrders();
+  document.getElementById('new-order-modal').remove();
+  renderOrders();
+}
+
+function advanceOrder(id) {
+  const o = orders.find(x=>x.id===id); if(!o) return;
+  const idx = ORDER_STATUSES.indexOf(o.status);
+  if (idx < ORDER_STATUSES.length-1) {
+    o.status = ORDER_STATUSES[idx+1];
+    o.timeline.push({ status: ORDER_STATUS_LABELS[o.status], ts: nowStr(), note:'' });
+    saveOrders();
+    renderOrders();
+  }
+}
+
+function openDeliveryModal(id) {
+  const ex = document.getElementById('delivery-modal'); if(ex) ex.remove();
+  const modal = document.createElement('div');
+  modal.id = 'delivery-modal';
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-box" style="width:480px;">
+      <div class="modal-title"><span>📸 Mark as Delivered</span><button class="modal-close" onclick="document.getElementById('delivery-modal').remove()">×</button></div>
+      <div class="modal-field" style="margin-bottom:14px;">
+        <label style="font-size:11px;color:#6b8aad;display:block;margin-bottom:6px;">Delivery Photo</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+          <label class="btn-secondary" style="font-size:12px;padding:7px 14px;cursor:pointer;">📷 Take Photo<input type="file" accept="image/*" capture="environment" id="delivery-photo-input" style="display:none" onchange="previewDeliveryPhoto(this)" /></label>
+          <label class="btn-secondary" style="font-size:12px;padding:7px 14px;cursor:pointer;">🖼 Upload Photo<input type="file" accept="image/*" id="delivery-upload-input" style="display:none" onchange="previewDeliveryPhoto(this)" /></label>
+        </div>
+        <div id="delivery-photo-preview" style="display:none;margin-bottom:10px;">
+          <img id="delivery-preview-img" style="width:100%;max-height:180px;object-fit:cover;border-radius:10px;" />
+        </div>
+      </div>
+      <div class="modal-field" style="margin-bottom:6px;"><label style="font-size:11px;color:#6b8aad;display:block;margin-bottom:5px;">Delivery Note</label>
+        <select class="inp" id="delivery-note-select" onchange="if(this.value==='custom')document.getElementById('delivery-note-custom').style.display='';else document.getElementById('delivery-note-custom').style.display='none';">
+          <option value="">-- Select or type --</option>
+          <option value="Handed to receptionist">Handed to receptionist</option>
+          <option value="Left at front desk">Left at front desk</option>
+          <option value="Handed directly to recipient">Handed directly to recipient</option>
+          <option value="Left at door (signature waived)">Left at door (signature waived)</option>
+          <option value="Delivered to mailroom">Delivered to mailroom</option>
+          <option value="custom">Custom note...</option>
+        </select>
+      </div>
+      <textarea class="inp" id="delivery-note-custom" style="display:none;height:60px;margin-bottom:14px;" placeholder="Custom delivery note..."></textarea>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
+        <button class="btn-secondary" onclick="document.getElementById('delivery-modal').remove()">Cancel</button>
+        <button class="btn-primary" onclick="confirmDelivery('${id}')">✅ Confirm Delivery</button>
+      </div>
+    </div>`;
+  modal.addEventListener('click', e=>{ if(e.target===modal) modal.remove(); });
+  document.body.appendChild(modal);
+}
+
+let deliveryPhotoBase64 = null;
+function previewDeliveryPhoto(input) {
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    deliveryPhotoBase64 = e.target.result;
+    document.getElementById('delivery-preview-img').src = deliveryPhotoBase64;
+    document.getElementById('delivery-photo-preview').style.display = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+function confirmDelivery(id) {
+  const o = orders.find(x=>x.id===id); if(!o) return;
+  const noteSelect = document.getElementById('delivery-note-select').value;
+  const noteCustom = document.getElementById('delivery-note-custom').value.trim();
+  const note = noteSelect==='custom' ? noteCustom : noteSelect;
+  o.status = 'delivered';
+  o.deliveryPhoto = deliveryPhotoBase64 || null;
+  o.deliveryNote = note;
+  o.deliveredAt = nowStr();
+  o.timeline.push({ status:'Delivered', ts: nowStr(), note: note||'' });
+  deliveryPhotoBase64 = null;
+  saveOrders();
+  document.getElementById('delivery-modal').remove();
+  renderOrders();
+}
+
+function openOrderNoteModal(id) {
+  const note = prompt('Add a note to this order (visible to client):');
+  if (!note || !note.trim()) return;
+  const o = orders.find(x=>x.id===id); if(!o) return;
+  o.timeline.push({ status:'Note Added', ts: nowStr(), note: note.trim() });
+  saveOrders();
+  renderOrders();
+}
+
+function deleteOrder(id) {
+  if (!confirm('Delete this order?')) return;
+  orders = orders.filter(o=>o.id!==id);
+  saveOrders();
+  renderOrders();
+}
+
+function viewFullPhoto(id) {
+  const o = orders.find(x=>x.id===id); if(!o||!o.deliveryPhoto) return;
+  const w = window.open(''); w.document.write(`<img src="${o.deliveryPhoto}" style="max-width:100%;"/>`);
+}
+
+async function saveOrders() {
+  try {
+    localStorage.setItem('tdg_orders', JSON.stringify(orders));
+    if (fbReady && db) {
+      clearTimeout(window._orderSaveTO);
+      window._orderSaveTO = setTimeout(async()=>{
+        await db.collection('crm').doc('orders').set({ orders });
+      }, 600);
+    }
+  } catch(e) { console.error('saveOrders error', e); }
+}
+
+async function loadOrders() {
+  try {
+    if (fbReady && db) {
+      const snap = await db.collection('crm').doc('orders').get();
+      orders = snap.exists ? (snap.data().orders||[]) : [];
+      // Live listener
+      db.collection('crm').doc('orders').onSnapshot(snap=>{
+        if(snap.exists){ orders = snap.data().orders||[]; if(activeTab==='Orders') renderOrders(); renderClientPortal(); }
+      });
+    } else {
+      const lo = localStorage.getItem('tdg_orders');
+      orders = lo ? JSON.parse(lo) : [];
+    }
+  } catch(e) { orders = []; }
+}
+
+// ═══════════════════════════════════════════
+//  CLIENT PORTAL
+// ═══════════════════════════════════════════
+function showClientPortal(user) {
+  document.getElementById('client-portal').style.display = 'block';
+  const el = document.getElementById('portal-user-email');
+  if(el) el.textContent = user.email;
+  renderClientPortal(user.email);
+  // Live updates
+  if(fbReady&&db) db.collection('crm').doc('orders').onSnapshot(snap=>{
+    if(snap.exists){ orders=snap.data().orders||[]; renderClientPortal(user.email); }
+  });
+}
+
+function renderClientPortal(email) {
+  const userEmail = email || (currentUser && currentUser.email) || '';
+  const myOrders = orders.filter(o=>o.clientEmail && o.clientEmail.toLowerCase()===userEmail.toLowerCase());
+  const el = document.getElementById('portal-orders-list');
+  if (!el) return;
+  if (!myOrders.length) {
+    el.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#6b8aad;">
+      <div style="font-size:48px;margin-bottom:16px;">📦</div>
+      <div style="font-size:16px;font-weight:600;color:#8baabf;">No deliveries yet</div>
+      <div style="font-size:13px;margin-top:8px;">Your orders will appear here once created by TDG Courier.</div>
+    </div>`;
+    return;
+  }
+  el.innerHTML = myOrders.map(order => {
+    const stepIdx = ORDER_STATUSES.indexOf(order.status);
+    const trackSteps = [
+      {icon:'📋',label:'Order Created'},
+      {icon:'📦',label:'Picked Up'},
+      {icon:'🚚',label:'In Transit'},
+      {icon:'✅',label:'Delivered'}
+    ];
+    const trackHTML = `<div class="portal-track">
+      ${trackSteps.map((s,i)=>`
+        ${i>0?`<div class="portal-track-line ${i<=stepIdx?'done':''}"></div>`:''}
+        <div class="portal-track-step">
+          <div class="portal-track-circle ${i<stepIdx?'done':i===stepIdx?'active':''}">${s.icon}</div>
+          <div class="portal-track-label">${s.label}</div>
+        </div>`).join('')}
+    </div>`;
+    const proof = order.deliveryPhoto ? `
+      <div class="delivery-proof" style="margin-top:14px;">
+        <div style="font-size:12px;color:#4ade80;font-weight:600;margin-bottom:6px;">✅ Delivery Confirmed</div>
+        <img src="${order.deliveryPhoto}" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;" />
+        ${order.deliveryNote?`<div style="font-size:13px;color:#8baabf;margin-top:8px;">💬 ${esc(order.deliveryNote)}</div>`:''}
+        <div style="font-size:11px;color:#4a6a8a;margin-top:4px;">Delivered ${esc(order.deliveredAt||'')}</div>
+      </div>` : '';
+    const tl = (order.timeline||[]).slice().reverse().map(t=>`
+      <div class="order-timeline-item">
+        <div class="order-tl-dot done"></div>
+        <div><span style="color:#c5d8ee;font-size:12px;">${esc(t.status)}</span><span style="color:#4a6a8a;font-size:11px;margin-left:8px;">${esc(t.ts)}</span>
+        ${t.note?`<div style="color:#8baabf;font-size:12px;margin-top:2px;">${esc(t.note)}</div>`:''}</div>
+      </div>`).join('');
+    return `
+      <div class="portal-order">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:17px;font-weight:700;">${esc(order.title)}</div>
+            <div style="font-size:12px;color:#6b8aad;margin-top:3px;">Order #${esc(order.trackingId||order.id)} · ${esc(order.service||'')} ${order.eta?`· ETA: ${esc(order.eta)}`:''}</div>
+          </div>
+          <span class="status-pill ${order.status}">${ORDER_ICONS[order.status]||''} ${ORDER_STATUS_LABELS[order.status]||order.status}</span>
+        </div>
+        <div style="font-size:13px;color:#8baabf;margin-top:10px;">
+          📍 <strong style="color:#c5d8ee;">From:</strong> ${esc(order.pickup||'—')} &nbsp;→&nbsp; <strong style="color:#c5d8ee;">To:</strong> ${esc(order.dropoff||'—')}
+        </div>
+        ${trackHTML}
+        ${proof}
+        ${tl?`<div class="order-timeline" style="margin-top:14px;border-top:1px solid #1e3048;padding-top:12px;">${tl}</div>`:''}
+      </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+(async () => {
+  const overlay = document.createElement("div");
+  overlay.id = "loading-overlay";
+  overlay.style.cssText = "position:fixed;inset:0;background:#0b1422;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;";
+  overlay.innerHTML = `
+    <div style="font-size:36px;animation:spin 1s linear infinite;">🔄</div>
+    <div style="font-size:16px;color:#5eb8ff;font-weight:600;">Connecting to Firebase...</div>
+    <div style="font-size:12px;color:#6b8aad;">Loading your CRM</div>
+    <style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>`;
+  document.body.appendChild(overlay);
+
+  await loadData();
+  await loadOrders();
+  overlay.remove();
+
+  // Hide app until auth resolves
+  document.getElementById('app').style.display = 'none';
+  initAuth();
+})();
+
+</script>
+</body>
+</html>
