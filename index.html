@@ -1682,6 +1682,16 @@ async function doLogin() {
   const email = document.getElementById('la-email').value.trim();
   const pass  = document.getElementById('la-pass').value;
   if (!email || !pass) return setLoginErr('Please enter email and password.');
+  // Offline fallback: accept any login and go straight to dashboard
+  if (window._offlineMode || !auth || !window._fbAuth) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    const hu = document.getElementById('header-user');
+    if (hu) hu.textContent = email;
+    setSyncStatus('offline', '⚠ Offline');
+    renderDashboard();
+    return;
+  }
   try {
     const { signInWithEmailAndPassword } = window._fbAuth;
     await signInWithEmailAndPassword(auth, email, pass);
@@ -2126,40 +2136,50 @@ window.onerror = function(msg, src, line, col, err) {
 };
 
 (async () => {
-  const overlay = document.createElement("div");
-  overlay.id = "loading-overlay";
-  overlay.style.cssText = "position:fixed;inset:0;background:#0b1422;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;";
-  overlay.innerHTML = `
-    <div style="font-size:36px;animation:spin 1s linear infinite;">🔄</div>
-    <div style="font-size:16px;color:#5eb8ff;font-weight:600;" id="load-msg">Loading Firebase...</div>
-    <div style="font-size:11px;color:#4a6a8a;" id="load-sub">Please wait</div>
-    <style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>`;
-  document.body.appendChild(overlay);
+  // Step 1: Show login screen IMMEDIATELY — never blank
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
 
-  const setMsg = (m, s) => {
-    const el = document.getElementById('load-msg'); if(el) el.textContent = m;
-    const sl = document.getElementById('load-sub'); if(sl) sl.textContent = s||'';
-  };
+  // Step 2: Show a small non-blocking status indicator
+  const indicator = document.createElement('div');
+  indicator.id = 'fb-indicator';
+  indicator.style.cssText = 'position:fixed;bottom:16px;right:16px;background:#0d1a2b;border:1px solid #1e3048;border-radius:8px;padding:8px 14px;font-size:11px;color:#5eb8ff;z-index:3000;font-family:DM Sans,sans-serif;';
+  indicator.textContent = '⟳ Connecting to Firebase...';
+  document.body.appendChild(indicator);
+
+  const removeIndicator = () => { const el = document.getElementById('fb-indicator'); if(el) el.remove(); };
 
   try {
-    setMsg('Loading Firebase SDKs...', 'Step 1 of 3');
-    await loadData();
-    setMsg('Loading orders...', 'Step 2 of 3');
+    await Promise.race([
+      loadData(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Firebase timeout')), 8000))
+    ]);
     await loadOrders();
-    setMsg('Starting app...', 'Step 3 of 3');
-    overlay.remove();
-    document.getElementById('app').style.display = 'none';
-    document.getElementById('login-screen').style.display = 'flex';
+    removeIndicator();
     initAuth();
   } catch(e) {
-    const msg = e && e.message ? e.message : String(e);
-    console.error('INIT ERROR:', msg, e);
-    overlay.innerHTML = `
-      <div style="font-size:28px;">⚠️</div>
-      <div style="font-size:15px;color:#f87171;font-weight:600;">Failed to Start</div>
-      <div style="font-size:12px;color:#8baabf;max-width:80%;text-align:center;line-height:1.6;">${msg}</div>
-      <button onclick="startOffline()" style="margin-top:16px;background:#1a3a5c;border:1px solid #2a5a8c;color:#5eb8ff;padding:10px 24px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;">Continue Offline (localStorage only)</button>
-      <button onclick="location.reload()" style="background:transparent;border:1px solid #2a4a6a;color:#6b8aad;padding:8px 20px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;">Retry</button>`;
+    console.warn('Firebase failed, running offline:', e.message);
+    removeIndicator();
+    // Load local data but keep login screen visible
+    try {
+      const sl = localStorage.getItem('tdg_leads');
+      const sr = localStorage.getItem('tdg_reminders');
+      const ss = localStorage.getItem('tdg_pipeline_stages');
+      leads          = sl ? JSON.parse(sl) : DEFAULT_LEADS;
+      reminders      = sr ? JSON.parse(sr) : DEFAULT_REMINDERS;
+      pipelineStages = ss ? JSON.parse(ss) : [...DEFAULT_STAGES];
+      orders         = [];
+      try { const lo = localStorage.getItem('tdg_orders'); if(lo) orders = JSON.parse(lo); } catch(_){}
+    } catch(_) {
+      leads = DEFAULT_LEADS; reminders = DEFAULT_REMINDERS; pipelineStages = [...DEFAULT_STAGES]; orders = [];
+    }
+    const warn = document.createElement('div');
+    warn.style.cssText = 'position:fixed;bottom:16px;right:16px;background:#1a1a0a;border:1px solid #5a4a00;border-radius:8px;padding:8px 14px;font-size:11px;color:#fbbf24;z-index:3000;font-family:DM Sans,sans-serif;';
+    warn.textContent = '⚠ Offline mode — data saved locally only';
+    document.body.appendChild(warn);
+    setTimeout(() => warn.remove(), 5000);
+    // Still show login so admin can proceed; on login just open the app directly
+    window._offlineMode = true;
   }
 })();
 
