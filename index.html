@@ -1744,11 +1744,13 @@ async function doClientSignup() {
 }
 
 async function doLogout() {
-  await firebase.auth().signOut();
+  if (auth) await firebase.auth().signOut();
+  else { startOffline(); }
 }
 
 // Auth state observer — drives everything
 function initAuth() {
+  if (!auth) { startOffline(); return; }
   firebase.auth().onAuthStateChanged(async (user) => {
     if (!user) {
       // Show login
@@ -2113,25 +2115,75 @@ function renderClientPortal(email) {
 // ═══════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════
+window.onerror = function(msg, src, line, col, err) {
+  const overlay = document.getElementById('loading-overlay');
+  if (overlay) overlay.innerHTML = `
+    <div style="font-size:24px;">⚠️</div>
+    <div style="font-size:15px;color:#f87171;font-weight:600;">Startup Error</div>
+    <div style="font-size:12px;color:#8baabf;max-width:80%;text-align:center;">${msg} (line ${line})</div>
+    <button onclick="location.reload()" style="margin-top:12px;background:#1a2f47;border:1px solid #2a4a6a;color:#5eb8ff;padding:8px 20px;border-radius:8px;font-size:13px;cursor:pointer;">Reload</button>`;
+};
+
 (async () => {
   const overlay = document.createElement("div");
   overlay.id = "loading-overlay";
   overlay.style.cssText = "position:fixed;inset:0;background:#0b1422;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;";
   overlay.innerHTML = `
     <div style="font-size:36px;animation:spin 1s linear infinite;">🔄</div>
-    <div style="font-size:16px;color:#5eb8ff;font-weight:600;">Connecting to Firebase...</div>
-    <div style="font-size:12px;color:#6b8aad;">Loading your CRM</div>
+    <div style="font-size:16px;color:#5eb8ff;font-weight:600;" id="load-msg">Loading Firebase...</div>
+    <div style="font-size:11px;color:#4a6a8a;" id="load-sub">Please wait</div>
     <style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>`;
   document.body.appendChild(overlay);
 
-  await loadData();
-  await loadOrders();
-  overlay.remove();
+  const setMsg = (m, s) => {
+    const el = document.getElementById('load-msg'); if(el) el.textContent = m;
+    const sl = document.getElementById('load-sub'); if(sl) sl.textContent = s||'';
+  };
 
-  // Hide app until auth resolves
-  document.getElementById('app').style.display = 'none';
-  initAuth();
+  try {
+    setMsg('Loading Firebase SDKs...', 'Step 1 of 3');
+    await loadData();
+    setMsg('Loading orders...', 'Step 2 of 3');
+    await loadOrders();
+    setMsg('Starting app...', 'Step 3 of 3');
+    overlay.remove();
+    document.getElementById('app').style.display = 'none';
+    initAuth();
+  } catch(e) {
+    const msg = e && e.message ? e.message : String(e);
+    console.error('INIT ERROR:', msg, e);
+    overlay.innerHTML = `
+      <div style="font-size:28px;">⚠️</div>
+      <div style="font-size:15px;color:#f87171;font-weight:600;">Failed to Start</div>
+      <div style="font-size:12px;color:#8baabf;max-width:80%;text-align:center;line-height:1.6;">${msg}</div>
+      <button onclick="startOffline()" style="margin-top:16px;background:#1a3a5c;border:1px solid #2a5a8c;color:#5eb8ff;padding:10px 24px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;">Continue Offline (localStorage only)</button>
+      <button onclick="location.reload()" style="background:transparent;border:1px solid #2a4a6a;color:#6b8aad;padding:8px 20px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;">Retry</button>`;
+  }
 })();
+
+function startOffline() {
+  try {
+    const sl = localStorage.getItem('tdg_leads');
+    const sr = localStorage.getItem('tdg_reminders');
+    const ss = localStorage.getItem('tdg_pipeline_stages');
+    leads          = sl ? JSON.parse(sl) : DEFAULT_LEADS;
+    reminders      = sr ? JSON.parse(sr) : DEFAULT_REMINDERS;
+    pipelineStages = ss ? JSON.parse(ss) : [...DEFAULT_STAGES];
+    orders         = [];
+    try { const lo = localStorage.getItem('tdg_orders'); if(lo) orders = JSON.parse(lo); } catch(e){}
+  } catch(e) {
+    leads = DEFAULT_LEADS; reminders = DEFAULT_REMINDERS; pipelineStages = [...DEFAULT_STAGES]; orders = [];
+  }
+  const overlay = document.getElementById('loading-overlay');
+  if (overlay) overlay.remove();
+  setSyncStatus('offline', '⚠ Offline');
+  const app = document.getElementById('app');
+  if (app) app.style.display = 'flex';
+  const ls = document.getElementById('login-screen');
+  if (ls) ls.style.display = 'none';
+  renderDashboard();
+}
+
 
 </script>
 </body>
