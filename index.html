@@ -1743,7 +1743,13 @@ function initAuth() {
   if (!auth || !window._fbAuth) { startOffline(); return; }
   const { onAuthStateChanged } = window._fbAuth;
   const { doc, getDoc, onSnapshot } = window._fbDb;
+  // Fallback: if auth state doesn't fire in 6s, just show login screen
+  const authTimeout = setTimeout(() => {
+    const ls = document.getElementById('login-screen');
+    if (ls && ls.style.display === 'none') ls.style.display = 'flex';
+  }, 6000);
   onAuthStateChanged(auth, async (user) => {
+    clearTimeout(authTimeout);
     if (!user) {
       document.getElementById('login-screen').style.display = 'flex';
       document.getElementById('app').style.display = 'none';
@@ -2143,6 +2149,7 @@ window.onerror = function(msg, src, line, col, err) {
     setMsg('Starting app...', 'Step 3 of 3');
     overlay.remove();
     document.getElementById('app').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
     initAuth();
   } catch(e) {
     const msg = e && e.message ? e.message : String(e);
